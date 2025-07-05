@@ -1,0 +1,179 @@
+PODS:
+  - Ably (1.2.33):
+    - AblyDeltaCodec (= 1.3.3)
+    - msgpack (= 0.4.0)
+  - ably_flutter (1.2.40):
+    - Ably (= 1.2.33)
+    - Flutter
+  - AblyDeltaCodec (1.3.3)
+  - Flutter (1.0.0)
+  - flutter_env_native (0.0.1):
+    - Flutter
+  - flutter_native_splash (2.4.3):
+    - Flutter
+  - flutter_secure_storage (6.0.0):
+    - Flutter
+  - Google-Maps-iOS-Utils (5.0.0):
+    - GoogleMaps (~> 8.0)
+  - google_maps_flutter_ios (0.0.1):
+    - Flutter
+    - Google-Maps-iOS-Utils (< 7.0, >= 5.0)
+    - GoogleMaps (< 10.0, >= 8.4)
+  - GoogleMaps (8.4.0):
+    - GoogleMaps/Maps (= 8.4.0)
+  - GoogleMaps/Base (8.4.0)
+  - GoogleMaps/Maps (8.4.0):
+    - GoogleMaps/Base
+  - libphonenumber_plugin (0.0.1):
+    - Flutter
+    - PhoneNumberKit
+  - local_auth_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - msgpack (0.4.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - PhoneNumberKit (3.8.0):
+    - PhoneNumberKit/PhoneNumberKitCore (= 3.8.0)
+    - PhoneNumberKit/UIKit (= 3.8.0)
+  - PhoneNumberKit/PhoneNumberKitCore (3.8.0)
+  - PhoneNumberKit/UIKit (3.8.0):
+    - PhoneNumberKit/PhoneNumberKitCore
+  - Stripe (24.7.0):
+    - StripeApplePay (= 24.7.0)
+    - StripeCore (= 24.7.0)
+    - StripePayments (= 24.7.0)
+    - StripePaymentsUI (= 24.7.0)
+    - StripeUICore (= 24.7.0)
+  - stripe_ios (0.0.1):
+    - Flutter
+    - Stripe (~> 24.7.0)
+    - stripe_ios/stripe_ios (= 0.0.1)
+    - stripe_ios/stripe_objc (= 0.0.1)
+    - StripeApplePay (~> 24.7.0)
+    - StripeFinancialConnections (~> 24.7.0)
+    - StripePayments (~> 24.7.0)
+    - StripePaymentSheet (~> 24.7.0)
+    - StripePaymentsUI (~> 24.7.0)
+  - stripe_ios/stripe_ios (0.0.1):
+    - Flutter
+    - Stripe (~> 24.7.0)
+    - stripe_ios/stripe_objc
+    - StripeApplePay (~> 24.7.0)
+    - StripeFinancialConnections (~> 24.7.0)
+    - StripePayments (~> 24.7.0)
+    - StripePaymentSheet (~> 24.7.0)
+    - StripePaymentsUI (~> 24.7.0)
+  - stripe_ios/stripe_objc (0.0.1):
+    - Flutter
+    - Stripe (~> 24.7.0)
+    - StripeApplePay (~> 24.7.0)
+    - StripeFinancialConnections (~> 24.7.0)
+    - StripePayments (~> 24.7.0)
+    - StripePaymentSheet (~> 24.7.0)
+    - StripePaymentsUI (~> 24.7.0)
+  - StripeApplePay (24.7.0):
+    - StripeCore (= 24.7.0)
+  - StripeCore (24.7.0)
+  - StripeFinancialConnections (24.7.0):
+    - StripeCore (= 24.7.0)
+    - StripeUICore (= 24.7.0)
+  - StripePayments (24.7.0):
+    - StripeCore (= 24.7.0)
+    - StripePayments/Stripe3DS2 (= 24.7.0)
+  - StripePayments/Stripe3DS2 (24.7.0):
+    - StripeCore (= 24.7.0)
+  - StripePaymentSheet (24.7.0):
+    - StripeApplePay (= 24.7.0)
+    - StripeCore (= 24.7.0)
+    - StripePayments (= 24.7.0)
+    - StripePaymentsUI (= 24.7.0)
+  - StripePaymentsUI (24.7.0):
+    - StripeCore (= 24.7.0)
+    - StripePayments (= 24.7.0)
+    - StripeUICore (= 24.7.0)
+  - StripeUICore (24.7.0):
+    - StripeCore (= 24.7.0)
+
+DEPENDENCIES:
+  - ably_flutter (from `.symlinks/plugins/ably_flutter/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_env_native (from `.symlinks/plugins/flutter_env_native/ios`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
+  - libphonenumber_plugin (from `.symlinks/plugins/libphonenumber_plugin/ios`)
+  - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - PhoneNumberKit (~> 3.8.0)
+  - stripe_ios (from `.symlinks/plugins/stripe_ios/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Ably
+    - AblyDeltaCodec
+    - Google-Maps-iOS-Utils
+    - GoogleMaps
+    - msgpack
+    - PhoneNumberKit
+    - Stripe
+    - StripeApplePay
+    - StripeCore
+    - StripeFinancialConnections
+    - StripePayments
+    - StripePaymentSheet
+    - StripePaymentsUI
+    - StripeUICore
+
+EXTERNAL SOURCES:
+  ably_flutter:
+    :path: ".symlinks/plugins/ably_flutter/ios"
+  Flutter:
+    :path: Flutter
+  flutter_env_native:
+    :path: ".symlinks/plugins/flutter_env_native/ios"
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  google_maps_flutter_ios:
+    :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
+  libphonenumber_plugin:
+    :path: ".symlinks/plugins/libphonenumber_plugin/ios"
+  local_auth_darwin:
+    :path: ".symlinks/plugins/local_auth_darwin/darwin"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  stripe_ios:
+    :path: ".symlinks/plugins/stripe_ios/ios"
+
+SPEC CHECKSUMS:
+  Ably: 1d78e5dec56db6d2cf91b10d14fea796ce591bae
+  ably_flutter: c2fe3978e382ce306fd0e45fbb4626af7eb72503
+  AblyDeltaCodec: add5d06a756b3581b12aab5b5500a320b8c55bea
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_env_native: 1ffd562384b97c82279738dcce4edeeb01857dee
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
+  flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  Google-Maps-iOS-Utils: 66d6de12be1ce6d3742a54661e7a79cb317a9321
+  google_maps_flutter_ios: 0291eb2aa252298a769b04d075e4a9d747ff7264
+  GoogleMaps: 8939898920281c649150e0af74aa291c60f2e77d
+  libphonenumber_plugin: d134f173b22bfa5ede50887071f087f309277f8c
+  local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
+  msgpack: c85f6251873059738472ae136951cec5f30f3251
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  PhoneNumberKit: ec00ab8cef5342c1dc49fadb99d23fa7e66cf0ef
+  Stripe: 8a03a78bfa16b197f9fac51e42670ac563b34388
+  stripe_ios: 95bdf6ba58efd184fe1dfed194cd8692299d66ca
+  StripeApplePay: 3c1b43d9b5130f6b714863bf8c9482c24168ab27
+  StripeCore: 4955c2af14446db04818ad043d19d8f97b73c5fa
+  StripeFinancialConnections: 8cf97b04c2f354879a2a5473126efac38f11f406
+  StripePayments: 91820845bece6117809bcfdcaef39c84c2b4cae5
+  StripePaymentSheet: 1810187cbdbc73410b8fb86cecafaaa41c1481fc
+  StripePaymentsUI: 326376e23caa369d1f58041bdb858c89c2b17ed4
+  StripeUICore: 17a4f3adb81ae05ab885e1b353022a430176eab1
+
+PODFILE CHECKSUM: 023efc24e8065b0892a376e481edc816606ef1b5
+
+COCOAPODS: 1.16.2

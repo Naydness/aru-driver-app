@@ -1,0 +1,457 @@
+import 'package:aru/src/components/button.dart';
+import 'package:aru/src/constants.dart';
+import 'package:aru/src/helper.dart';
+import 'package:aru/src/services/auth_manager.dart';
+import 'package:aru/src/services/http.dart';
+import 'package:aru/src/services/popup_manager.dart';
+import 'package:aru/src/views/dashboard.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:get/get.dart';
+
+import 'dart:math' as math;
+
+import 'package:text_scroll/text_scroll.dart';
+
+class Wallet extends StatelessWidget {
+  const Wallet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    WalletController controller = Get.put(WalletController());
+    AuthManager authManager = Get.find();
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
+        title: Text('Wallet'),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 13, 24, 47),
+          image: DecorationImage(
+            image: AssetImage('assets/images/map_bg_overlay.png'),
+            fit: BoxFit.cover
+          )
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              margin: EdgeInsets.fromLTRB(16, 140, 16, 0),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+              ),
+              child: Obx(() => Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Balance', style: TextStyle(
+                          fontSize: 10,
+                          color: colorBlack2
+                        )),
+                        const SizedBox(height: 4,),
+                        Text('\$${authManager.user['wallet']['balance']}', style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorBlack2
+                        ),),
+                      ],
+                    )
+                  ),
+                  const SizedBox(width: 16,),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        SizedBox(
+                          height: 60,
+                          width: double.infinity,
+                          child: Buttons.text(
+                            'Add Fund', 
+                            onPressed: () {
+                              controller.addFund();
+                            },
+                            prefixIcon: TablerIcons.plus
+                          ).primary.build(),
+                        ),
+                        if (controller.funding.value)
+                        Container(
+                          height: 60,
+                          color: Colors.white.withValues(alpha: .5),
+                        )
+                      ],
+                    )
+                  ),
+                ],
+              )),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF6F6F6),
+                  borderRadius: BorderRadiusDirectional.only(
+                    topStart: Radius.circular(24),
+                    topEnd: Radius.circular(24),
+                  )
+                ),
+                child: controller.obx(
+                  (state) {
+                    final List allTxns = state!;
+                    final List incomingTxns = allTxns
+                      .where((t) => TxnType.fromString(t['type']) == TxnType.incoming)
+                      .toList();
+                    final List outgoingTxns = allTxns
+                      .where((t) => TxnType.fromString(t['type']) == TxnType.outgoing)
+                      .toList();
+
+                    return Column(
+                      children: [
+                        Container(
+                          height: 60,
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFEBEBEB),
+                            borderRadius: BorderRadiusDirectional.only(
+                              topStart: Radius.circular(8),
+                              topEnd: Radius.circular(8)
+                            )
+                          ),
+                          child: TabBar(
+                            controller: controller.tabCtrl,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: colorPrimary
+                            ),
+                            labelColor: Colors.white,
+                            unselectedLabelColor: colorPrimary,
+                            tabs: [
+                              Tab(text: 'All'),
+                              Tab(text: 'Incoming'),
+                              Tab(text: 'Outgoing'),
+                            ]
+                          )
+                        ),
+                        const SizedBox(height: 16,),
+                        Expanded(
+                          child: TabBarView(
+                            controller: controller.tabCtrl,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: [
+                              if (allTxns.isEmpty)
+                              buildEmptyPlaceholder()
+                              else
+                              RefreshIndicator.adaptive(
+                                onRefresh: () async => controller.init(),
+                                child: ListView.separated(
+                                  padding: EdgeInsets.zero,
+                                  itemBuilder: (ctx, idx) {
+                                    final txn = allTxns[idx];
+
+                                    return Material(
+                                      child: _buildListItem(
+                                        type: TxnType.fromString(txn['type']),
+                                        title: txn['reference'],
+                                        subtitle: 'Transaction remark'
+                                      ),
+                                    );
+                                  }, 
+                                  separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
+                                  itemCount: allTxns.length
+                                ),
+                              ),
+
+                              if (incomingTxns.isEmpty)
+                              buildEmptyPlaceholder()
+                              else
+                              RefreshIndicator.adaptive(
+                                onRefresh: () async => controller.init(),
+                                child: ListView.separated(
+                                  padding: EdgeInsets.zero,
+                                  itemBuilder: (ctx, idx) {
+                                    final txn = incomingTxns[idx];
+
+                                    return Material(
+                                      child: _buildListItem(
+                                        type: TxnType.incoming,
+                                        title: txn['reference'],
+                                        subtitle: 'Transaction remark'
+                                      ),
+                                    );
+                                  }, 
+                                  separatorBuilder: (ctx, idx) => const SizedBox(height: 16,), 
+                                  itemCount: incomingTxns.length
+                                ),
+                              ),
+
+                              if (outgoingTxns.isEmpty)
+                              buildEmptyPlaceholder()
+                              else
+                              RefreshIndicator.adaptive(
+                                onRefresh: () async => controller.init(),
+                                child: ListView.separated(
+                                  padding: EdgeInsets.zero,
+                                  itemBuilder: (ctx, idx) {
+                                    final txn = outgoingTxns[idx];
+
+                                    return Material(
+                                      child: _buildListItem(
+                                        type: TxnType.outgoing,
+                                        title: txn['reference'],
+                                        subtitle: 'Transaction remark'
+                                      ),
+                                    );
+                                  },
+                                  separatorBuilder: (ctx, idx) => const SizedBox(height: 16,),
+                                  itemCount: outgoingTxns.length
+                                )
+                              )
+                            ]
+                          )
+                        )
+                      ],
+                    );
+                    /*return RefreshIndicator.adaptive(
+                      onRefresh: () async => controller.init(),
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          
+                          const SizedBox(height: 16),
+                          TabBarView(
+                            controller: controller.tabCtrl,
+                            children: [
+
+                            ]
+                          )
+                          Text('20 May, 10:30 AM', style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF858585)
+                          )),
+                          const SizedBox(height: 20),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.incoming,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Wallet funding - Paystack'
+                            )
+                          ),
+                          const SizedBox(height: 16),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.outgoing,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Ride payment - Paystack'
+                            )
+                          ),
+                          const SizedBox(height: 16),
+                          Text('18 May, 10:30 AM', style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF858585)
+                          )),
+                          const SizedBox(height: 20),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.outgoing,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Ride payment - Paystack'
+                            )
+                          ),
+                          const SizedBox(height: 16),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.incoming,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Wallet funding - Paystack'
+                            )
+                          ),
+                          const SizedBox(height: 16),
+                          Text('16 May, 10:30 AM', style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF858585)
+                          )),
+                          const SizedBox(height: 20),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.incoming,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Wallet funding - Paystack'
+                            )
+                          ),
+                          const SizedBox(height: 16),
+                          Material(
+                            child: _buildListItem(
+                              type: TxnType.outgoing,
+                              icon: TablerIcons.arrow_up,
+                              title: 'Xch00210Wfr',
+                              subtitle: 'Ride payment - Paystack'
+                            )
+                          ),
+                        ],
+                      )
+                    );*/
+                  },
+                  onLoading: buildLoader(opacity: 0),
+                  onEmpty: buildEmptyPlaceholder(),
+                  onError: (error) => buildErrorPlaceholder(text: error),
+                )
+              )
+            )
+          ],
+        ),
+      )
+    );
+  }
+
+  Widget _buildListItem({TxnType? type, String? title, String? subtitle, Function()? onTap}) {
+    return ListTile(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8)
+      ),
+      horizontalTitleGap: 12,
+      tileColor: Colors.white,
+      onTap: onTap,
+      leading: CircleAvatar(
+        backgroundColor: colorPrimary,
+        foregroundColor: Colors.white,
+        radius: 22,
+        child: Transform.rotate(
+          angle: math.pi / 4,
+          child: Icon(
+            type == TxnType.incoming
+              ? TablerIcons.arrow_down
+              : TablerIcons.arrow_up,
+            size: 20
+          )
+        ) 
+      ),
+      titleTextStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: colorBlack2,
+        fontSize: 14
+      ),
+      subtitleTextStyle: TextStyle(
+        fontSize: 10,
+        color: colorBlack2
+      ),
+      title: TextScroll(
+        '$title', 
+        mode: TextScrollMode.bouncing,
+        pauseOnBounce: Duration(seconds: 2),
+        pauseBetween: Duration(seconds: 2),
+        velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
+      ),
+      subtitle: Text('$subtitle'),
+      trailing: Text('\$50', style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Colors.black
+      ))
+    );
+  }
+}
+
+class WalletController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
+  late TabController tabCtrl;
+  final HttpService http = Get.find();
+  RxList transactions = RxList.empty();
+  RxBool funding = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    tabCtrl = TabController(length: 3, vsync: this, animationDuration: Duration.zero);
+  }
+
+  @override
+  void onReady() {
+    init();
+  }
+
+  void init() async {
+    change(null, status: RxStatus.loading());
+    final result = await http.getAllTransactions();
+    if (result is String) {
+      PopupManager.error(
+        title: 'Failed',
+        message: result
+      );
+      change(null, status: RxStatus.error());
+    } else {
+      // transactions.value = result;
+      final data = await loadJson('data.json');
+      transactions.value = data['transactions'];
+
+      change(transactions, status: transactions.isEmpty
+        ? RxStatus.empty() : RxStatus.success());
+    }
+  }
+
+  void addFund() async {
+    funding.value = true;
+    final result = await http.createPaymentIntent(20, 'usd');
+    if (result is String) {
+      PopupManager.error(
+        title: 'Failed',
+        message: result
+      );
+    } else {
+      Stripe.publishableKey = dotenv.get('STRIPE_PK');
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          merchantDisplayName: 'ARU',
+          paymentIntentClientSecret: result['clientSecret'],
+          style: ThemeMode.light
+        )
+      );
+
+      try {
+        await Stripe.instance.presentPaymentSheet();
+        DashboardController dashboardCtrl = Get.find();
+        dashboardCtrl.init();
+        /*clear intent*/
+      } on StripeException catch (e) {
+        print('Stripe Err: $e');
+      } catch (e) {
+        print('Err: $e');
+      }
+    }
+    funding.value = false;
+  }
+}
+
+enum TxnType {
+  incoming,
+  outgoing;
+
+  static fromString(String type) {
+    late TxnType tnxType;
+    switch (type) {
+      case 'credit':
+        tnxType = TxnType.incoming;
+        break;
+      default:
+        tnxType = TxnType.outgoing;
+    }
+
+    return tnxType;
+  }
+}
