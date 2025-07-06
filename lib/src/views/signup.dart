@@ -36,7 +36,26 @@ class SignUp extends StatelessWidget {
           statusBarBrightness: Brightness.light
         ),
         centerTitle: true,
-        title: Text('Personal Information'),
+        title: Obx(() {
+          if (controller.stage.value == SignupStage.initial) {
+            final title;
+            switch (controller.step.value) {
+              case 1:
+                title = 'Experience';
+                break;
+              case 2:
+                title = 'Uploads';
+                break;
+              case 3:
+                title = 'Vehicle Information';
+                break;
+              default:
+                title = 'Personal Information';
+            }
+            return Text(title);
+          }
+          return Container();
+        }),
       ),
       body: Stack(
         children: [
@@ -68,7 +87,7 @@ class SignUp extends StatelessWidget {
                     Step(
                       title: Text(''), 
                       content: Form(
-                        key: controller.formKey,
+                        key: controller.step1FormKey,
                         autovalidateMode: controller.validateMode.value,
                         child: ListView(
                           controller: controller.scrollController,
@@ -265,6 +284,7 @@ class SignUp extends StatelessWidget {
                     Step(
                       title: Text(''), 
                       content: Form(
+                        key: controller.step2FormKey,
                         child: ListView(
                           controller: controller.scrollController,
                           shrinkWrap: true,
@@ -277,96 +297,154 @@ class SignUp extends StatelessWidget {
                                   fontWeight: FontWeight.w600
                                 )),
                                 const SizedBox(height: 8,),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
+                                FormField<bool>(
+                                  validator: (v) {
+                                    if (v == null) {
+                                      return 'This field is required';
+                                    } return null;
+                                  },
+                                  builder: (FormFieldState<bool> field) {
+                                    return Obx(() {
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Radio.adaptive(
-                                            value: true, 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: true, 
+                                                      groupValue: controller.pastExp.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.pastExp.value = true;
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('Yes'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: false, 
+                                                      groupValue: controller.pastExp.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.pastExp.value = false;
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('No'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8,),
-                                          Text('Yes'),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Radio.adaptive(
-                                            value: false, 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
-                                          ),
-                                          const SizedBox(width: 8,),
-                                          Text('No'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                          if (field.hasError) ...[
+                                            const SizedBox(height: 12),
+                                            Text('${field.errorText}', style: TextStyle(color: Colors.red),)
+                                          ]
+                                        ]
+                                      );
+                                    });
+                                  }
                                 )
                               ],
                             ),
-                            const SizedBox(height:40,),
+                            const SizedBox(height: 28,),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('If yes, which platforms have you wowrked with?', style: TextStyle(
+                                Text('If yes, which platforms have you worked with?', style: TextStyle(
                                   fontWeight: FontWeight.w600
                                 ),),
-                                const SizedBox(height: 8,),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
+                                // const SizedBox(height: 8,),
+                                FormField<List<String>>(
+                                  initialValue: [],
+                                  validator: (v) {
+                                    if (controller.pastExp.value ?? false) {
+                                      if (v!.isEmpty) {
+                                        return 'Select a platform';
+                                      } return null;
+                                    }
+                                  },
+                                  builder: (FormFieldState<List> field) {
+                                    return Obx(() {
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Checkbox.adaptive(
-                                            value: false, 
-                                            onChanged: (v) {}
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Checkbox.adaptive(
+                                                      value: controller.platforms.contains('uber'), 
+                                                      onChanged: (v) {
+                                                        if (v ?? false) {
+                                                          controller.platforms.addIf(
+                                                            !controller.platforms.contains('uber'), 
+                                                            'uber'
+                                                          );
+                                                        } else {
+                                                          controller.platforms.removeWhere((p) => p == 'uber');
+                                                        }
+                                                      }
+                                                    ),
+                                                    Text('Uber'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Checkbox.adaptive(
+                                                      value: false, 
+                                                      onChanged: (v) {}
+                                                    ),
+                                                    Text('Bolt'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Checkbox.adaptive(
+                                                      value: false, 
+                                                      onChanged: (v) {}
+                                                    ),
+                                                    Text('Gokada'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          Text('Uber'),
+                                          if (field.hasError) ...[
+                                            const SizedBox(height: 12,),
+                                            Text('${field.errorText}', style: TextStyle(color: Colors.red),)
+                                          ]
                                         ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Checkbox.adaptive(
-                                            value: false, 
-                                            onChanged: (v) {}
-                                          ),
-                                          Text('Bolt'),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Checkbox.adaptive(
-                                            value: false, 
-                                            onChanged: (v) {}
-                                          ),
-                                          Text('Gokada'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                      );
+                                    });
+                                  }
                                 )
                               ],
                             ),
-                            const SizedBox(height: 40,),
+                            const SizedBox(height: 20,),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -374,43 +452,69 @@ class SignUp extends StatelessWidget {
                                   fontWeight: FontWeight.w600
                                 ),),
                                 const SizedBox(height: 8,),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
+                                FormField(
+                                  validator: (v) {
+                                    if (v == null) {
+                                      return 'This field is required';
+                                    } return null;
+                                  },
+                                  builder: (FormFieldState<bool> field) {
+                                    return Obx(() {
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Radio.adaptive(
-                                            value: true, 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: true, 
+                                                      groupValue: controller.tracking.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.tracking.value = true;
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('Yes'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: false, 
+                                                      groupValue: controller.tracking.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.tracking.value = false;
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('No'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8,),
-                                          Text('Yes'),
+                                          if (field.hasError) ...[
+                                            const SizedBox(height: 12,),
+                                            Text('${field.errorText}', style: TextStyle(color: Colors.red),)
+                                          ]
                                         ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Radio.adaptive(
-                                            value: false, 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
-                                          ),
-                                          const SizedBox(width: 8,),
-                                          Text('No'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                )
+                                      );
+                                    });
+                                  }
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 40,),
+                            const SizedBox(height: 28),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -418,62 +522,91 @@ class SignUp extends StatelessWidget {
                                   fontWeight: FontWeight.w600
                                 ),),
                                 const SizedBox(height: 8,),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
+                                FormField(
+                                  validator: (v) {
+                                    if (v == null) {
+                                      return 'This field is required';
+                                    } return null;
+                                  },
+                                  builder: (FormFieldState<String> field) {
+                                    return Obx(() {
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Radio.adaptive(
-                                            value: 'both', 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: 'all', 
+                                                      groupValue: controller.requestTypes.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.requestTypes.value = 'all';
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('Yes'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: 'rides', 
+                                                      groupValue: controller.requestTypes.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.requestTypes.value = 'rides';
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('Only rides'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12,),
+                                              GestureDetector(
+                                                behavior: HitTestBehavior.opaque,
+                                                child: Row(
+                                                  children: [
+                                                    Radio.adaptive(
+                                                      value: 'deliveries', 
+                                                      groupValue: controller.requestTypes.value, 
+                                                      onChanged: (v) {
+                                                        field.didChange(v);
+                                                        controller.requestTypes.value = v;
+                                                      }
+                                                    ),
+                                                    const SizedBox(width: 8,),
+                                                    Text('On deliveries'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8,),
-                                          Text('Yes'),
+                                          if (field.hasError) ...[
+                                            const SizedBox(height: 12,),
+                                            Text('${field.errorText}', style: TextStyle(color: Colors.red))
+                                          ]
                                         ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Radio.adaptive(
-                                            value: 'ride', 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
-                                          ),
-                                          const SizedBox(width: 8,),
-                                          Text('Only rides'),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12,),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      child: Row(
-                                        children: [
-                                          Radio.adaptive(
-                                            value: 'deliveries', 
-                                            groupValue: null, 
-                                            onChanged: (v) {}
-                                          ),
-                                          const SizedBox(width: 8,),
-                                          Text('On deliveries'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                )
+                                      );
+                                    });
+                                  }
+                                ),
                               ],
                             ),
                             const SizedBox(height: 40,),
                             SizedBox(
                               height: 60,
                               child: Buttons.text('Continue', onPressed: () {
-
+                                controller.toStep3();
                               }).primary.build(),
                             ),
                             const SizedBox(height: 16,),
@@ -722,9 +855,12 @@ class SignUp extends StatelessWidget {
 }
 
 class SignupController extends GetxController {
-  RxInt step = 3.obs;
+  RxInt step = 0.obs;
   Rx<SignupStage> stage = SignupStage.initial.obs;
-  final formKey = GlobalKey<FormState>();
+  final step1FormKey = GlobalKey<FormState>();
+  final step2FormKey = GlobalKey<FormState>();
+  final step3FormKey = GlobalKey<FormState>();
+  final step4FormKey = GlobalKey<FormState>();
   Rx<AutovalidateMode> validateMode = AutovalidateMode.disabled.obs;
   final HttpService http = Get.find();
   RxBool hidePassword = true.obs;
@@ -739,6 +875,11 @@ class SignupController extends GetxController {
   late TextEditingController passwordCtrl;
   PhoneNumber phoneData = PhoneNumber();
   RxBool agreeTerms = false.obs;
+
+  Rx<bool?> pastExp = Rxn();
+  RxList<String> platforms = RxList.empty();
+  Rx<bool?> tracking = Rxn();
+  Rx<String?> requestTypes = Rxn();
 
   final otpFormKey = GlobalKey<FormState>();
   late TextEditingController otpCtrl;
@@ -766,20 +907,25 @@ class SignupController extends GetxController {
   }
 
   void toStep2() async {
-    if (formKey.currentState!.validate()) {
+    if (step1FormKey.currentState!.validate()) {
       processing.value = true;
 
       final names = nameCtrl.text.trim().split(RegExp(r'\s{1,}'));
-      final data = {
-        'firstname': names[0],
-        'lastname': names.sublist(1).join(' '),
-        'email': emailCtrl.text,
-        'phone': phoneData.phoneNumber,
-        'password': passwordCtrl.text,
-        'countryCode': phoneData.isoCode
+      final personalInfo = {
+        'personal[firstBame]': names[0],
+        'personal[lastName]': names.sublist(1).join(' '),
+        'personal[email]': emailCtrl.text,
+        'personal[phoneNumber]': phoneData.phoneNumber,
+        'personal[licenseNumber]': licenseNoCtrl.text,
+        'personal[password]': passwordCtrl.text,
+        // 'countryCode': phoneData.isoCode
+      };
+      print('Reg Personal: $personalInfo');
+
+      final experienceInfo = {
+
       };
 
-      print('Reg Req: $data');
 
       /*final result = await http.signup(data);
       if (result is String) {
@@ -798,6 +944,16 @@ class SignupController extends GetxController {
       processing.value = false;
     } else {
       validateMode.value = AutovalidateMode.onUserInteraction;
+    }
+  }
+
+  void toStep3() async {
+    if (step2FormKey.currentState!.validate()) {
+    print('to step 3');
+
+    } else {
+    print('step 2 not valid');
+
     }
   }
 
