@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:aru/src/components/button.dart';
 import 'package:aru/src/components/custom_dropdown.dart';
 import 'package:aru/src/components/custom_text_field.dart';
@@ -9,11 +11,13 @@ import 'package:aru/src/services/http.dart';
 import 'package:aru/src/services/popup_manager.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:easy_stepper/easy_stepper.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import 'login.dart';
 
@@ -38,7 +42,7 @@ class SignUp extends StatelessWidget {
         centerTitle: true,
         title: Obx(() {
           if (controller.stage.value == SignupStage.initial) {
-            final title;
+            late String title;
             switch (controller.step.value) {
               case 1:
                 title = 'Experience';
@@ -623,68 +627,621 @@ class SignUp extends StatelessWidget {
                     ),
                     Step(
                       title: Text(''), 
-                      content: ListView(
-                        controller: controller.scrollController,
-                        shrinkWrap: true,
-                        padding: EdgeInsets.only(bottom: 80),
-                        children: [
-                          Text('Upload checklists'),
-                          const SizedBox(height: 16,),
-                          ListTile(
-                            leading: Icon(TablerIcons.photo, size: 40,),
-                            title: Text('Profile Picture'),
-                            subtitle: Text('1/1'),
-                            trailing: Icon(TablerIcons.fidget_spinner),
-                          ),
-                          const SizedBox(height: 8,),
-                          ListTile(
-                            leading: Icon(TablerIcons.photo, size: 40,),
-                            title: Text('Driver\'s License'),
-                            subtitle: Text('0/2'),
-                            trailing: Icon(TablerIcons.fidget_spinner),
-                          ),
-                          const SizedBox(height: 8,),
-                          ListTile(
-                            leading: Icon(TablerIcons.photo, size: 40,),
-                            title: Text('Vehicle Photos'),
-                            subtitle: Text('0/4'),
-                            trailing: Icon(TablerIcons.fidget_spinner),
-                          ),
-                          const SizedBox(height: 8,),
-                          ListTile(
-                            leading: Icon(TablerIcons.photo, size: 40,),
-                            title: Text('Proof of Ownership'),
-                            subtitle: Text('0/1'),
-                            trailing: Icon(TablerIcons.fidget_spinner),
-                          ),
-                          const SizedBox(height: 24,),
-                          DottedBorder(
-                            options: RectDottedBorderOptions(
-                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      content: Form(
+                        key: controller.step3FormKey,
+                        child: ListView(
+                          controller: controller.scrollController,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.only(bottom: 80),
+                          children: [
+                            Text('Upload checklists'),
+                            const SizedBox(height: 16,),
+                            FormField<int>(
+                              initialValue: 0,
+                              validator: (v) {
+                                if (v! < 1) {
+                                  return 'Profile picture required';
+                                } return null;
+                              },
+                              builder: (field) {
+                                controller.profilePhotoFieldState = field;
+                                return Obx(() => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Material(
+                                      child: ListTile(
+                                        leading: Icon(TablerIcons.photo, size: 40,),
+                                        title: Text('Profile Picture'),
+                                        subtitle: Text(
+                                          controller.profilePhoto.value != null
+                                          ? '1/1' : '0/1'
+                                        ),
+                                        trailing: controller.profilePhoto.value != null ? CircleAvatar(
+                                          radius: 12,
+                                          backgroundColor: colorGreen,
+                                          foregroundColor: Colors.white,
+                                          child: Icon(TablerIcons.check, size: 16,)
+                                        ) : null,
+                                        shape: controller.checklistIdx.value == 0 ? RoundedRectangleBorder(
+                                          side: BorderSide(color: colorPrimary.withValues(alpha: .2))
+                                        ) : null,
+                                        onTap: () => controller.checklistIdx.value = 0,
+                                      ),
+                                    ),
+                                    if (field.hasError) ...[
+                                      const SizedBox(height: 12,),
+                                      Text('${field.errorText}', style: TextStyle(color: Colors.red),)
+                                    ]
+                                  ],
+                                ));
+                              }
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text('Upload Profile Picture', style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700
-                                ),),
-                                const SizedBox(height: 8,),
-                                Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
-                                  fontSize: 12
-                                ), textAlign: TextAlign.center,),
-                                const SizedBox(height: 8,),
-                                Buttons.text('Upload photo', onPressed: () {
-                                  
-                                }).white.build()
+                            const SizedBox(height: 8,),
+                            FormField<int>(
+                              initialValue: 0,
+                              validator: (v) {
+                                if (v! < 2) {
+                                  return 'Driver\'s license is required';
+                                } return null;
+                              },
+                              builder: (field) {
+                                controller.licenseFieldState = field;
+                                return Obx(() => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(TablerIcons.photo, size: 40,),
+                                      title: Text('Driver\'s License'),
+                                      subtitle: Text(
+                                        '${controller.licenseSelected}/2'
+                                      ),
+                                      trailing: controller.licenseSelected == 2 ? CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: colorGreen,
+                                        foregroundColor: Colors.white,
+                                        child: Icon(TablerIcons.check, size: 16,)
+                                      ) : null,
+                                      shape: controller.checklistIdx.value == 1 ? RoundedRectangleBorder(
+                                        side: BorderSide(color: colorPrimary.withValues(alpha: .2))
+                                      ) : null,
+                                      onTap: () => controller.checklistIdx.value = 1,
+                                    ),
+                                    if (field.hasError) ...[
+                                      const SizedBox(height: 12,),
+                                      Text('${field.errorText}', style: TextStyle(color: Colors.red))
+                                    ]
+                                  ],
+                                ));
+                              }
+                            ),
+                            const SizedBox(height: 8,),
+                            FormField<int>(
+                              initialValue: 0,
+                              validator: (v) {
+                                if (v! < 4) {
+                                  return 'Vehicle photos are required';
+                                } return null;
+                              },
+                              builder: (field) {
+                                controller.vehiclePhotoFieldState = field;
+                                return Obx(() => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(TablerIcons.photo, size: 40,),
+                                      title: Text('Vehicle Photos'),
+                                      subtitle: Text(
+                                        '${controller.vehiclePhotoSelected}/4'
+                                      ),
+                                      trailing: controller.vehiclePhotoSelected == 4 ? CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: colorGreen,
+                                        foregroundColor: Colors.white,
+                                        child: Icon(TablerIcons.check, size: 16,)
+                                      ) : null,
+                                      shape: controller.checklistIdx.value == 2 ? RoundedRectangleBorder(
+                                        side: BorderSide(color: colorPrimary.withValues(alpha: .2))
+                                      ) : null,
+                                      onTap: () => controller.checklistIdx.value = 2,
+                                    ),
+                                    if (field.hasError) ...[
+                                      const SizedBox(height: 12,),
+                                      Text('${field.errorText}', style: TextStyle(color: Colors.red))
+                                    ]
+                                  ],
+                                ));
+                              }
+                            ),
+                            const SizedBox(height: 8,),
+                            FormField<int>(
+                              initialValue: 0,
+                              validator: (v) {
+                                if (v! < 1) {
+                                  return 'Proof of ownership is required';
+                                } return null;
+                              },
+                              builder: (field) {
+                                controller.proofFieldState = field;
+                                return Obx(() => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(TablerIcons.photo, size: 40,),
+                                      title: Text('Proof of Ownership'),
+                                      subtitle: Text(
+                                        controller.ownershipProof.value != null
+                                        ? '1/1' : '0/1'
+                                      ),
+                                      trailing: controller.ownershipProof.value != null ? CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: colorGreen,
+                                        foregroundColor: Colors.white,
+                                        child: Icon(TablerIcons.check, size: 16,)
+                                      ) : null,
+                                      shape: controller.checklistIdx.value == 3 ? RoundedRectangleBorder(
+                                        side: BorderSide(color: colorPrimary.withValues(alpha: .2))
+                                      ) : null,
+                                      onTap: () => controller.checklistIdx.value = 3,
+                                    ),
+                                    if (field.hasError) ...[
+                                      const SizedBox(height: 12,),
+                                      Text('${field.errorText}', style: TextStyle(color: Colors.red))
+                                    ]
+                                  ],
+                                ));
+                              }
+                            ),
+                            const SizedBox(height: 24,),
+                            Container(
+                              constraints: BoxConstraints(minHeight: 150),
+                              child: ResponsiveGridList(
+                                listViewBuilderOptions: ListViewBuilderOptions(
+                                  controller: controller.scrollController,
+                                  shrinkWrap: true,
+                                  padding: EdgeInsets.zero
+                                ),
+                                minItemWidth: 300, 
+                                children: [
+                                  if (controller.checklistIdx.value == 0)
+                                  if (controller.profilePhoto.value == null)
+                                  DottedBorder(
+                                    options: RectDottedBorderOptions(
+                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text('Upload Profile Picture', style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700
+                                        ),),
+                                        const SizedBox(height: 8,),
+                                        Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                          fontSize: 12
+                                        ), textAlign: TextAlign.center,),
+                                        const SizedBox(height: 8,),
+                                        Buttons.text('Upload photo', onPressed: () async {
+                                          FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                            type: FileType.image
+                                          );
 
-                              ],
+                                          if (result != null) {
+                                            controller.profilePhoto.value = result.files.single;
+                                            controller.profilePhotoFieldState.didChange(1);
+                                          }
+                                        }).white.build()
+
+                                      ],
+                                    ),
+                                  )
+                                  else
+                                  Container(
+                                    height: 250,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: FileImage(
+                                          File(controller.profilePhoto.value!.path!)
+                                        ),
+                                        fit: BoxFit.contain
+                                      )
+                                    ),
+                                  ),
+
+                                  if (controller.checklistIdx.value == 1) ...[
+                                    if (controller.driversLicense[0] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload License (Front)', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.driversLicense[0] = result.files.single;
+                                              controller.licenseFieldState.didChange(controller.licenseSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.driversLicense[0]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                    if (controller.driversLicense[1] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload License (Back)', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.driversLicense[1] = result.files.single;
+                                              controller.licenseFieldState.didChange(controller.licenseSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.driversLicense[1]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                  ],
+
+                                  if (controller.checklistIdx.value == 2) ...[
+                                    if (controller.vehiclePhotos[0] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload Vehicle Photo 1', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.vehiclePhotos[0] = result.files.single;
+                                              controller.vehiclePhotoFieldState.didChange(controller.vehiclePhotoSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.vehiclePhotos[0]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                    if (controller.vehiclePhotos[1] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload Vehicle Photo 2', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.vehiclePhotos[1] = result.files.single;
+                                              controller.vehiclePhotoFieldState.didChange(controller.vehiclePhotoSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.vehiclePhotos[1]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                    if (controller.vehiclePhotos[2] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload Vehicle Photo 3', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.vehiclePhotos[2] = result.files.single;
+                                              controller.vehiclePhotoFieldState.didChange(controller.vehiclePhotoSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.vehiclePhotos[2]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                    if (controller.vehiclePhotos[3] == null)
+                                    DottedBorder(
+                                      options: RectDottedBorderOptions(
+                                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text('Upload Vehicle Photo 4', style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700
+                                          ),),
+                                          const SizedBox(height: 8,),
+                                          Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                            fontSize: 12
+                                          ), textAlign: TextAlign.center,),
+                                          const SizedBox(height: 8,),
+                                          Buttons.text('Upload photo', onPressed: () async {
+                                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.vehiclePhotos[3] = result.files.single;
+                                              controller.vehiclePhotoFieldState.didChange(controller.vehiclePhotoSelected);
+                                            }
+                                          }).white.build()
+
+                                        ],
+                                      ),
+                                    )
+                                    else
+                                    Container(
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                            File(controller.vehiclePhotos[3]!.path!)
+                                          ),
+                                          fit: BoxFit.contain
+                                        )
+                                      ),
+                                    ),
+                                  ],
+
+                                  if (controller.checklistIdx.value == 3)
+                                  if (controller.ownershipProof.value == null)
+                                  DottedBorder(
+                                    options: RectDottedBorderOptions(
+                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text('Upload Proof', style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700
+                                        ),),
+                                        const SizedBox(height: 8,),
+                                        Text('Please upload a clear photo in JPG or PNG format', style: TextStyle(
+                                          fontSize: 12
+                                        ), textAlign: TextAlign.center,),
+                                        const SizedBox(height: 8,),
+                                        Buttons.text('Upload photo', onPressed: () async {
+                                          FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                              type: FileType.image
+                                            );
+
+                                            if (result != null) {
+                                              controller.ownershipProof.value = result.files.single;
+                                              controller.proofFieldState.didChange(1);
+                                            }
+                                        }).white.build()
+
+                                      ],
+                                    ),
+                                  )
+                                  else
+                                  Container(
+                                    height: 250,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: FileImage(
+                                          File(controller.ownershipProof.value!.path!)
+                                        ),
+                                        fit: BoxFit.contain
+                                      )
+                                    ),
+                                  ),
+                                ]
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 40,),
+                            const SizedBox(height: 40,),
+                              SizedBox(
+                                height: 60,
+                                child: Buttons.text('Continue', onPressed: () {
+                                  controller.toStep4();
+                                }).primary.build(),
+                              ),
+                              const SizedBox(height: 16,),
+                              SizedBox(
+                                height: 60,
+                                child: Buttons.text('Go back', onPressed: () {
+                                  controller.step--;
+                                }).primary.outlined.build(),
+                              )
+                          ],
+                        ),
+                      ),
+                      stepStyle: _buildStepStyle(controller.step.value, 2)
+                    ),
+                    Step(
+                      title: Text(''), 
+                      content: Form(
+                        key: controller.step4FormKey,
+                        child: ListView(
+                          controller: controller.scrollController,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.only(bottom: 80),
+                          children: [
+                            Container(
+                              constraints: BoxConstraints(minHeight: 60),
+                              decoration: BoxDecoration(
+                                color: colorPrimary.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8)
+                              ),
+                              child: CustomDropdown(
+                                value: 1, 
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 1,
+                                    child: Text('Select vehicle type')
+                                  )
+                                ]
+                              ),
+                            ),
+                            const SizedBox(height: 16,),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: 60),
+                              child: CustomTextField(
+                                label: 'Make and Model',
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'This field is required';
+                                  } return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16,),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: 60),
+                              child: CustomTextField(
+                                label: 'Year of Manufacture',
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'This field is required';
+                                  } return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16,),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: 60),
+                              child: CustomTextField(
+                                label: 'License Plate Number',
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'This field is required';
+                                  } return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 40,),
                             SizedBox(
                               height: 60,
-                              child: Buttons.text('Continue', onPressed: () {
+                              child: Buttons.text('Sign Up', onPressed: () {
 
                               }).primary.build(),
                             ),
@@ -695,84 +1252,8 @@ class SignUp extends StatelessWidget {
                                 controller.step--;
                               }).primary.outlined.build(),
                             )
-                        ],
-                      ),
-                      stepStyle: _buildStepStyle(controller.step.value, 2)
-                    ),
-                    Step(
-                      title: Text(''), 
-                      content: ListView(
-                        controller: controller.scrollController,
-                        shrinkWrap: true,
-                        padding: EdgeInsets.only(bottom: 80),
-                        children: [
-                          Container(
-                            constraints: BoxConstraints(minHeight: 60),
-                            decoration: BoxDecoration(
-                              color: colorPrimary.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8)
-                            ),
-                            child: CustomDropdown(
-                              value: 1, 
-                              items: [
-                                DropdownMenuItem(
-                                  value: 1,
-                                  child: Text('Select vehicle type')
-                                )
-                              ]
-                            ),
-                          ),
-                          const SizedBox(height: 16,),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: 60),
-                            child: CustomTextField(
-                              label: 'Make and Model',
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'This field is required';
-                                } return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16,),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: 60),
-                            child: CustomTextField(
-                              label: 'Year of Manufacture',
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'This field is required';
-                                } return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16,),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: 60),
-                            child: CustomTextField(
-                              label: 'License Plate Number',
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'This field is required';
-                                } return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 40,),
-                          SizedBox(
-                            height: 60,
-                            child: Buttons.text('Sign Up', onPressed: () {
-
-                            }).primary.build(),
-                          ),
-                          const SizedBox(height: 16,),
-                          SizedBox(
-                            height: 60,
-                            child: Buttons.text('Go back', onPressed: () {
-                              controller.step--;
-                            }).primary.outlined.build(),
-                          )
-                        ],
+                          ],
+                        ),
                       ),
                       stepStyle: _buildStepStyle(controller.step.value, 3)
                     )
@@ -855,7 +1336,7 @@ class SignUp extends StatelessWidget {
 }
 
 class SignupController extends GetxController {
-  RxInt step = 0.obs;
+  RxInt step = 2.obs;
   Rx<SignupStage> stage = SignupStage.initial.obs;
   final step1FormKey = GlobalKey<FormState>();
   final step2FormKey = GlobalKey<FormState>();
@@ -881,6 +1362,17 @@ class SignupController extends GetxController {
   Rx<bool?> tracking = Rxn();
   Rx<String?> requestTypes = Rxn();
 
+  RxInt checklistIdx = 0.obs;
+  late Rx<PlatformFile?> profilePhoto;
+  late RxList<PlatformFile?> driversLicense;
+  late RxList<PlatformFile?> vehiclePhotos;
+  late Rx<PlatformFile?> ownershipProof;
+  FormFieldState<int> profilePhotoFieldState = FormFieldState();
+  FormFieldState<int> licenseFieldState = FormFieldState();
+  FormFieldState<int> vehiclePhotoFieldState = FormFieldState();
+  FormFieldState<int> proofFieldState = FormFieldState();
+  
+
   final otpFormKey = GlobalKey<FormState>();
   late TextEditingController otpCtrl;
 
@@ -892,6 +1384,12 @@ class SignupController extends GetxController {
     phoneCtrl = TextEditingController();
     licenseNoCtrl = TextEditingController();
     passwordCtrl = TextEditingController();
+
+    profilePhoto = Rxn<PlatformFile>();
+    driversLicense = RxList.filled(2, null);
+    vehiclePhotos = RxList.filled(4, null);
+    ownershipProof = Rxn<PlatformFile>();
+
     otpCtrl = TextEditingController();
   }
 
@@ -904,6 +1402,14 @@ class SignupController extends GetxController {
     passwordCtrl.dispose();
     otpCtrl.dispose();
     super.onClose();
+  }
+
+  int get licenseSelected {
+    return driversLicense.where((l) => l != null).length;
+  }
+
+  int get vehiclePhotoSelected {
+    return vehiclePhotos.where((v) => v != null).length;
   }
 
   void toStep2() async {
@@ -949,11 +1455,13 @@ class SignupController extends GetxController {
 
   void toStep3() async {
     if (step2FormKey.currentState!.validate()) {
-    print('to step 3');
+      step.value = 2;
+    }
+  }
 
-    } else {
-    print('step 2 not valid');
-
+  void toStep4() async {
+    if (step3FormKey.currentState!.validate()) {
+      step.value = 3;
     }
   }
 
