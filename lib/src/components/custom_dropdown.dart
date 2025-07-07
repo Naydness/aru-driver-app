@@ -4,14 +4,18 @@ import 'package:flutter/material.dart';
 class CustomDropdown<T> extends StatelessWidget {
   const CustomDropdown({
     super.key, 
+    required this.items, 
+    this.value, 
     this.onChanged, 
-    required this.value, 
-    required this.items
+    this.hint,
+    this.validator
   });
 
-  final T value;
+  final T? value;
   final List<DropdownMenuItem<T>> items;
+  final String? hint;
   final Function(T?)?onChanged;
+  final String? Function(T?)? validator;
 
 
   @override
@@ -26,6 +30,8 @@ class CustomDropdown<T> extends StatelessWidget {
           DropdownMenuItem(child: Text('Third'), value: 3,)
         ], */
         items: items,
+        hint: hint != null ? Text('$hint') : null,
+        validator: validator,
         onChanged: onChanged,
         buttonStyleData: ButtonStyleData(
           padding: EdgeInsets.only(left: 0)

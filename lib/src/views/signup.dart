@@ -403,6 +403,7 @@ class SignUp extends StatelessWidget {
                                                         } else {
                                                           controller.platforms.removeWhere((p) => p == 'uber');
                                                         }
+                                                        field.didChange(controller.platforms);
                                                       }
                                                     ),
                                                     Text('Uber'),
@@ -415,8 +416,19 @@ class SignUp extends StatelessWidget {
                                                 child: Row(
                                                   children: [
                                                     Checkbox.adaptive(
-                                                      value: false, 
-                                                      onChanged: (v) {}
+                                                      value: controller.platforms.contains('bolt'), 
+                                                      onChanged: (v) {
+                                                        if (v ?? false) {
+                                                          controller.platforms.addIf(
+                                                            !controller.platforms.contains('bolt'),
+                                                            'bolt'
+                                                          );
+                                                        } else {
+                                                          controller.platforms.removeWhere((p) => p == 'bolt');
+                                                        }
+
+                                                        field.didChange(controller.platforms);
+                                                      }
                                                     ),
                                                     Text('Bolt'),
                                                   ],
@@ -428,8 +440,19 @@ class SignUp extends StatelessWidget {
                                                 child: Row(
                                                   children: [
                                                     Checkbox.adaptive(
-                                                      value: false, 
-                                                      onChanged: (v) {}
+                                                      value: controller.platforms.contains('gokada'), 
+                                                      onChanged: (v) {
+                                                        if (v ?? false) {
+                                                          controller.platforms.addIf(
+                                                            !controller.platforms.contains('gokada'),
+                                                            'gokada'
+                                                          );
+                                                        } else {
+                                                          controller.platforms.removeWhere((p) => p == 'gokada');
+                                                        }
+
+                                                        field.didChange(controller.platforms);
+                                                      }
                                                     ),
                                                     Text('Gokada'),
                                                   ],
@@ -1193,23 +1216,40 @@ class SignUp extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8)
                               ),
                               child: CustomDropdown(
-                                value: 1, 
+                                hint: 'Select Vehicle Type',
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'Vehicle type is required';
+                                  } return null;
+                                },
                                 items: [
                                   DropdownMenuItem(
-                                    value: 1,
-                                    child: Text('Select vehicle type')
+                                    value: 'car',
+                                    child: Text('Car')
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'van',
+                                    child: Text('Van')
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'bike',
+                                    child: Text('Bike')
                                   )
-                                ]
+                                ],
+                                onChanged: (v) {
+                                  controller.vehicleType = v;
+                                },
                               ),
                             ),
                             const SizedBox(height: 16,),
                             ConstrainedBox(
                               constraints: BoxConstraints(minHeight: 60),
                               child: CustomTextField(
+                                controller: controller.makeModelCtrl,
                                 label: 'Make and Model',
                                 validator: (v) {
                                   if (v == null || v.isEmpty) {
-                                    return 'This field is required';
+                                    return 'Make and Model are required';
                                   } return null;
                                 },
                               ),
@@ -1218,10 +1258,11 @@ class SignUp extends StatelessWidget {
                             ConstrainedBox(
                               constraints: BoxConstraints(minHeight: 60),
                               child: CustomTextField(
+                                controller: controller.yearOfManufactureCtrl,
                                 label: 'Year of Manufacture',
                                 validator: (v) {
                                   if (v == null || v.isEmpty) {
-                                    return 'This field is required';
+                                    return 'Year of manufacture is required';
                                   } return null;
                                 },
                               ),
@@ -1230,10 +1271,11 @@ class SignUp extends StatelessWidget {
                             ConstrainedBox(
                               constraints: BoxConstraints(minHeight: 60),
                               child: CustomTextField(
+                                controller: controller.plateNumCtrl,
                                 label: 'License Plate Number',
                                 validator: (v) {
                                   if (v == null || v.isEmpty) {
-                                    return 'This field is required';
+                                    return 'License plate is required';
                                   } return null;
                                 },
                               ),
@@ -1242,7 +1284,7 @@ class SignUp extends StatelessWidget {
                             SizedBox(
                               height: 60,
                               child: Buttons.text('Sign Up', onPressed: () {
-
+                                controller.signup();
                               }).primary.build(),
                             ),
                             const SizedBox(height: 16,),
@@ -1336,7 +1378,7 @@ class SignUp extends StatelessWidget {
 }
 
 class SignupController extends GetxController {
-  RxInt step = 2.obs;
+  RxInt step = 0.obs;
   Rx<SignupStage> stage = SignupStage.initial.obs;
   final step1FormKey = GlobalKey<FormState>();
   final step2FormKey = GlobalKey<FormState>();
@@ -1371,7 +1413,16 @@ class SignupController extends GetxController {
   FormFieldState<int> licenseFieldState = FormFieldState();
   FormFieldState<int> vehiclePhotoFieldState = FormFieldState();
   FormFieldState<int> proofFieldState = FormFieldState();
-  
+
+  String? vehicleType;
+  late TextEditingController makeModelCtrl;
+  late TextEditingController yearOfManufactureCtrl;
+  late TextEditingController plateNumCtrl;
+
+  late Map<String, dynamic> regPersonal;
+  late Map<String, dynamic> regExp;
+  late Map<String, dynamic> regUpload;
+  late Map<String, dynamic> regVehicle;
 
   final otpFormKey = GlobalKey<FormState>();
   late TextEditingController otpCtrl;
@@ -1390,6 +1441,10 @@ class SignupController extends GetxController {
     vehiclePhotos = RxList.filled(4, null);
     ownershipProof = Rxn<PlatformFile>();
 
+    makeModelCtrl = TextEditingController();
+    yearOfManufactureCtrl = TextEditingController();
+    plateNumCtrl = TextEditingController();
+
     otpCtrl = TextEditingController();
   }
 
@@ -1400,6 +1455,9 @@ class SignupController extends GetxController {
     phoneCtrl.dispose();
     licenseNoCtrl.dispose();
     passwordCtrl.dispose();
+    makeModelCtrl.dispose();
+    yearOfManufactureCtrl.dispose();
+    plateNumCtrl.dispose();
     otpCtrl.dispose();
     super.onClose();
   }
@@ -1417,20 +1475,16 @@ class SignupController extends GetxController {
       processing.value = true;
 
       final names = nameCtrl.text.trim().split(RegExp(r'\s{1,}'));
-      final personalInfo = {
-        'personal[firstBame]': names[0],
+      regPersonal = {
+        'personal[firstName]': names[0],
         'personal[lastName]': names.sublist(1).join(' '),
         'personal[email]': emailCtrl.text,
         'personal[phoneNumber]': phoneData.phoneNumber,
         'personal[licenseNumber]': licenseNoCtrl.text,
         'personal[password]': passwordCtrl.text,
-        // 'countryCode': phoneData.isoCode
+        'personal[countryCode]': phoneData.isoCode
       };
-      print('Reg Personal: $personalInfo');
-
-      final experienceInfo = {
-
-      };
+      print('Reg Personal: $regPersonal');
 
 
       /*final result = await http.signup(data);
@@ -1455,13 +1509,99 @@ class SignupController extends GetxController {
 
   void toStep3() async {
     if (step2FormKey.currentState!.validate()) {
+      regExp = {
+        'experience[previousExperience]': pastExp.value,
+        /*...platforms
+          .map((f) => 'experience[previousPlatform][]')
+          .toList()
+          .asMap(),*/
+        // for (var p in platforms) 'experience[previousPlatform][]': p,
+        'experience[previousPlatform][]': platforms,
+        'experience[navigationTrackingConsent]': tracking.value,
+        'experience[requestTypes]': requestTypes.value
+      };
+      print('Reg Exp: $regExp');
+
       step.value = 2;
     }
   }
 
   void toStep4() async {
     if (step3FormKey.currentState!.validate()) {
+      final licenseImages = driversLicense.map((lic) {
+        final file = File(lic!.path!);
+        return MultipartFile(
+          file, 
+          filename: lic.name
+        );
+      }).toList();
+
+      final vehicleImages = vehiclePhotos.map((v) {
+        final file = File(v!.path!);
+        return MultipartFile(
+          file, 
+          filename: v.name
+        );
+      }).toList();
+
+      final file = File(ownershipProof.value!.path!);
+      final regDocs = MultipartFile(
+        file, 
+        filename: ownershipProof.value!.name
+      );
+
+      regUpload = {
+        'licenseImages': licenseImages,
+        'vehicleImages': vehicleImages,
+        'registrationDocuments': [
+          regDocs,
+          regDocs
+        ],
+        'profileImage': MultipartFile(
+          File(profilePhoto.value!.path!), 
+          filename: profilePhoto.value!.name
+        )
+      };
+
       step.value = 3;
+    }
+  }
+
+  void signup() async {
+    if (step4FormKey.currentState!.validate()) {
+      final makeModel = makeModelCtrl.text.split(' ');
+      print('MM: $makeModel');
+      regVehicle = {
+        'vehicleInfo[make]': makeModel[0],
+        'vehicleInfo[model]': makeModel[1],
+        'vehicleInfo[plateNumber]': plateNumCtrl.text,
+        'vehicleInfo[year]': yearOfManufactureCtrl.text,
+        'vehicleInfo[color]': 'Black',
+        'vehicleInfo[category]': '6848996c6f6c33af02dac315',
+        'vehicleInfo[capacity]': 4,
+      };
+
+      print('regV: $regVehicle');
+
+      final data = {
+        ...regPersonal,
+        ...regExp,
+        ...regUpload,
+        ...regVehicle
+      };
+
+      final result = await http.signup(data);
+      if (result is String) {
+        PopupManager.error(
+          title: 'Registration Failed!',
+          message: result
+        );
+      } else {
+        PopupManager.success(
+          title: 'Registration Successful',
+          message: 'Verify account to continue'
+        );
+      }
     }
   }
 

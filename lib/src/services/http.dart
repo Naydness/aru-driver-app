@@ -22,7 +22,7 @@ class HttpService extends GetConnect {
     super.onInit();
     httpClient.baseUrl = 'https://aru-backend-production.up.railway.app';
     httpClient.defaultContentType = 'application/json';
-    httpClient.timeout = Duration(seconds: 20);
+    httpClient.timeout = Duration(seconds: 60);
     httpClient.addRequestModifier<dynamic>((req) async {
       if (!exclEndpoints.contains(req.url.path)) {
         final accessToken = await _getAccessToken();
@@ -90,14 +90,14 @@ class HttpService extends GetConnect {
 
   Future signup(Map<String, dynamic> data) async {
     try {
-      final Response res = await post(Endpoint.signup, {
-        'firstName': data['firstname'],
-        'lastName': data['lastname'],
-        'email': data['email'],
-        'phoneNumber': data['phone'],
-        'password': data['password'],
-        'countryCode': data['countryCode']
-      });
+      print('DATA: $data');
+      final FormData formData = FormData(data);
+
+      final Response res = await post(
+        Endpoint.signup, 
+        formData,
+        // contentType: 'multipart/form-data'
+      );
 
       debugPrint('Body: ${res.body}');
 
@@ -107,7 +107,7 @@ class HttpService extends GetConnect {
         return res.body['message'];
       }
     } catch (e) {
-      return 'Authentication failed. Please try again later.';
+      return 'Signup failed. Please try again later.';
     }
   }
 
@@ -291,7 +291,7 @@ class Endpoint {
 
   static const refreshToken = '$_basePath/auth/rider/refresh-token';
   static const login = '$_basePath/auth/driver/login';
-  static const signup = '$_basePath/auth/rider/register';
+  static const signup = '$_basePath/auth/driver/register';
   static const verifyEmail = '$_basePath/auth/driver/verify-email';
   static const resendOTP = '$_basePath/auth/driver/resend-otp';
   static const forgotPassword = '$_basePath/auth/driver/forgot-password';
