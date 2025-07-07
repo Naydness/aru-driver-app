@@ -122,7 +122,7 @@ class Home extends StatelessWidget {
                     )),
                     const SizedBox(height: 16),
                     Container(
-                      constraints: BoxConstraints(minHeight: 200),
+                      // constraints: BoxConstraints(minHeight: 200),
                       decoration: BoxDecoration(
                         // border: Border.all(color: Colors.red)
                       ),
@@ -150,6 +150,7 @@ class Home extends StatelessWidget {
                         ]
                       ),
                     ),
+                    const SizedBox(height: 16,),
                     SizedBox(
                       child: _buildOverviewItem(
                         null,
