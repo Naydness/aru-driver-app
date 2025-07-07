@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:ably_flutter/ably_flutter.dart' as ably;
 import 'package:aru/src/components/button.dart';
 import 'package:aru/src/components/route_summary.dart';
 import 'package:aru/src/constants.dart';
@@ -83,6 +86,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   late TabController tabCtrl;
   HttpService http = Get.find();
   AuthManager authManager = Get.find();
+  late StreamSubscription<ably.Message> subscription;
 
   @override
   void onInit() {
@@ -93,6 +97,20 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   @override
   void onReady() async {
     await init();
+
+    final ably.Realtime realtime = ably.Realtime(options: ably.ClientOptions(
+      // key: ablyKey
+      key: 'RbvVsQ.q4uDvQ:JlsQNqGVMJ9Ojikn5a-sINinYqRBsWOdRQD8pFv0HJQ'
+    ));
+
+    final userId = authManager.user['_id'];
+    print('user ID: $userId');
+    ably.RealtimeChannel channel = realtime.channels.get('driver:$userId');
+    print('Channel: $channel');
+    subscription = channel.subscribe().listen((ably.Message message) {
+      print('Ably Event (Driver): ${message.name}');
+    });
+
     /*Get.bottomSheet(
       isDismissible: false,
       Container(
