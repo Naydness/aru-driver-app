@@ -16,7 +16,7 @@ class ARU extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: false,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-        canvasColor: Colors.transparent
+        // canvasColor: Colors.transparent
       ),
       initialRoute: '/splash',
       getPages: [
