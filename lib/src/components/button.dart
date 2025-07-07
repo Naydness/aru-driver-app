@@ -72,6 +72,13 @@ class ButtonConfig {
     return this;
   }
 
+  ButtonConfig get green {
+    bgColor = colorGreen;
+    fgColor = Colors.white;
+    
+    return this;
+  }
+
   ButtonConfig get white{
     bgColor = Colors.white;
     fgColor = Color(0xFF858585);

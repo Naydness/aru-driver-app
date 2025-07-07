@@ -1,3 +1,5 @@
+import 'package:aru/src/components/button.dart';
+import 'package:aru/src/components/route_summary.dart';
 import 'package:aru/src/constants.dart';
 import 'package:aru/src/helper.dart';
 import 'package:aru/src/services/auth_manager.dart';
@@ -91,6 +93,130 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   @override
   void onReady() async {
     await init();
+    Get.bottomSheet(
+      isDismissible: false,
+      Container(
+        padding: EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+        // height: MediaQuery.of(Get.context!).size.height * .8,
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Image.asset('assets/images/delivery_van_2.png'),
+                  const SizedBox(width: 24,),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ride Request'),
+                        const SizedBox(height: 8),
+                        Text('2.3 miles - 12 mins')
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8,),
+                  Text('\$70', style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorBlack2
+                  ))
+                ],
+              ),
+              const SizedBox(height: 16,),
+              RouteSummary(
+                pickup: '12, James Oxford Street', 
+                destination: '24, David Street', 
+                stops: []
+              ),
+              const SizedBox(height: 16,),
+              Text('Addons', style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colorBlack2
+              )),
+              const SizedBox(height: 4,),
+              Wrap(
+                children: [
+                  Text('Moving Item, '),
+                  Text('Fragile Item'),
+                ],
+              ),
+              const SizedBox(height: 12,),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Special Instructions', style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorBlack2
+                  )),
+                  Text('Customer is a disable'),
+                  const SizedBox(height: 16,),
+                  Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFF6F6F6),
+                          borderRadius: BorderRadius.circular(16)
+                        ),
+                        child: Image.asset('assets/images/user.png'),
+                        /*child: Text(authManager.userInitials, style: TextStyle(
+                          color: colorBlack1,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20
+                        )),*/
+                      ),
+                      const SizedBox(width: 20,),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('John Doe', style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colorBlack2
+                            )),
+                            const SizedBox(height: 4,),
+                            Text('Customer', style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF858585)
+                            ))
+                          ],
+                        )
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 16,),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Buttons.text('Reject', onPressed: () {
+
+                        }).red.build()
+                      ),
+                      const SizedBox(width: 24,),
+                      Expanded(
+                        child: Buttons.text('Accept', onPressed: () {
+
+                        }).green.build()
+                      )
+                    ],
+                  )
+                ],
+              )
+            ],
+          ),
+        ),
+      )
+    );
   }
 
   Future init() async {
