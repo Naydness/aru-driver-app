@@ -99,27 +99,6 @@ class Profile extends StatelessWidget {
                       child: ListView(
                         padding: EdgeInsets.zero,
                         children: [
-                          Container(
-                            // height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8)
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                              titleTextStyle: TextStyle(
-                                fontSize: 10,
-                                color: colorBlack2
-                              ),
-                              subtitleTextStyle: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: colorBlack2
-                              ),
-                              title: Text('Balance'),
-                              subtitle: Text('\$$balance'),
-                            ),
-                          ),
-                          const SizedBox(height: 24,),
                           _buildProfileItem(
                             icon: TablerIcons.shield_check,
                             label: 'Security',
@@ -130,6 +109,18 @@ class Profile extends StatelessWidget {
                             icon: TablerIcons.settings,
                             label: 'Settings',
                             onTap: () => Get.to(Settings())
+                          ),
+                          const SizedBox(height: 16,),
+                          _buildProfileItem(
+                            icon: TablerIcons.credit_card_pay,
+                            label: 'Payment',
+                            onTap: () {}
+                          ),
+                          const SizedBox(height: 16,),
+                          _buildProfileItem(
+                            icon: TablerIcons.jewish_star,
+                            label: 'Ratings',
+                            onTap: () {}
                           ),
                           const SizedBox(height: 16,),
                           _buildProfileItem(
