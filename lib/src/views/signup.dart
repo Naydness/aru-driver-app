@@ -1569,6 +1569,8 @@ class SignupController extends GetxController {
 
   void signup() async {
     if (step4FormKey.currentState!.validate()) {
+      processing.value = true;
+
       final makeModel = makeModelCtrl.text.split(' ');
       print('MM: $makeModel');
       regVehicle = {
@@ -1601,7 +1603,11 @@ class SignupController extends GetxController {
           title: 'Registration Successful',
           message: 'Verify account to continue'
         );
+
+        Get.off(Login(), id: 0);
       }
+
+      processing.value = false;
     }
   }
 
