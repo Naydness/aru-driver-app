@@ -6,8 +6,8 @@ import 'package:aru/src/services/popup_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class Orders extends StatelessWidget {
-  const Orders({super.key});
+class Earnings extends StatelessWidget {
+  const Earnings({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class Orders extends StatelessWidget {
         elevation: 0,
         shadowColor: Colors.transparent,
         backgroundColor: Colors.transparent,
-        title: Text('Past Orders'),
+        title: Text('Earnings'),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -42,7 +42,7 @@ class Orders extends StatelessWidget {
           child: Column(
             children: [
               Container(
-                height: 60,
+
                 padding: EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Color(0xFFEBEBEB),
@@ -51,24 +51,46 @@ class Orders extends StatelessWidget {
                     topEnd: Radius.circular(8)
                   )
                 ),
-                child: TabBar(
-                  controller: controller.tabCtrl,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: colorPrimary
-                  ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: colorPrimary,
-                  tabs: [
-                    Tab(text: 'All'),
-                    Tab(text: 'Ride'),
-                    Tab(text: 'Package'),
-                  ]
-                ),
+                child: Column(
+                  children: [
+                    TabBar(
+                      controller: controller.tabCtrl,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: colorPrimary
+                      ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: colorPrimary,
+                      tabs: [
+                        Tab(text: 'Today'),
+                        Tab(text: 'This Week'),
+                      ]
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildOverviewItem(
+                            'wallet_cash.png', 
+                            'Total Earnings',
+                            '\$125.50'
+                          )
+                        ),
+                        Expanded(
+                          child: _buildOverviewItem(
+                            'delivery_van.png', 
+                            'Total Trips',
+                            '41'
+                          )
+                        ),
+                      ],
+                    )
+                  ],
+                )
               ),
               const SizedBox(height: 24,),
-              Expanded(
+              /*Expanded(
                 child: controller.obx(
                   (state) {
                     final List allOrders = state!;
@@ -120,25 +142,6 @@ class Orders extends StatelessWidget {
                             itemCount: rideOrders.length
                           ), 
                         ),
-
-                        if (packageOrders.isEmpty)
-                        buildEmptyPlaceholder()
-                        else
-                        RefreshIndicator.adaptive(
-                          onRefresh: () async => controller.init(),
-                          child: ListView.separated(
-                            padding: EdgeInsets.zero,
-                            itemBuilder: (ctx, idx) {
-                              final order = packageOrders[idx];
-
-                              return Material(
-                                child: _buildListItem(order),
-                              );
-                            }, 
-                            separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
-                            itemCount: packageOrders.length
-                          ), 
-                        ),
                       ]
                     );
                   },
@@ -146,7 +149,7 @@ class Orders extends StatelessWidget {
                   onEmpty: buildEmptyPlaceholder(),
                   onError: (error) => buildErrorPlaceholder(text: error)
                 )
-              )
+              )*/
             ],
           )
           /*ListView(
@@ -217,6 +220,51 @@ class Orders extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildOverviewItem(String? icon, String title, String subtitle, {IconData? subtitleIcon}) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8)
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8)
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Image.asset('assets/images/$icon', width: 40, height: 40,),
+              const SizedBox(height: 12),
+            ],
+            Text(title, style: TextStyle(
+              fontSize: 14,
+              color: colorBlack2
+            )),
+            SizedBox(
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (subtitleIcon != null) ...[
+                    Icon(subtitleIcon, color: colorAccent,),
+                    const SizedBox(width: 8,),
+                  ],
+                  Text(subtitle, style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colorBlack2
+                  ))
+                ]
+              )
+            )
+          ],
+        ),
+      )
+    );
+  }
 }
 
 class OrdersController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
@@ -227,7 +275,7 @@ class OrdersController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onInit() {
     super.onInit();
-    tabCtrl = TabController(length: 3, vsync: this, animationDuration: Duration.zero);
+    tabCtrl = TabController(length: 2, vsync: this, animationDuration: Duration.zero);
   }
 
   @override

@@ -11,9 +11,9 @@ import 'package:get/get.dart';
 import 'error.dart';
 import 'home.dart';
 import 'my_ride.dart';
-import 'orders.dart';
+import 'earnings.dart';
 import 'profile.dart';
-import 'wallet.dart';
+import 'trips.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -30,8 +30,8 @@ class Dashboard extends StatelessWidget {
             physics: NeverScrollableScrollPhysics(),
             children: [
               Home(),
-              Wallet(),
-              Orders(),
+              Trips(),
+              Earnings(),
               Profile()
             ]
           ),
@@ -93,7 +93,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   @override
   void onReady() async {
     await init();
-    Get.bottomSheet(
+    /*Get.bottomSheet(
       isDismissible: false,
       Container(
         padding: EdgeInsets.symmetric(horizontal: 36, vertical: 24),
@@ -216,7 +216,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
           ),
         ),
       )
-    );
+    );*/
   }
 
   Future init() async {

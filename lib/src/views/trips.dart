@@ -15,8 +15,8 @@ import 'dart:math' as math;
 
 import 'package:text_scroll/text_scroll.dart';
 
-class Wallet extends StatelessWidget {
-  const Wallet({super.key});
+class Trips extends StatelessWidget {
+  const Trips({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class Wallet extends StatelessWidget {
         elevation: 0,
         shadowColor: Colors.transparent,
         backgroundColor: Colors.transparent,
-        title: Text('Wallet'),
+        title: Text('Trips'),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -44,59 +44,10 @@ class Wallet extends StatelessWidget {
             Container(
               width: double.infinity,
               margin: EdgeInsets.fromLTRB(16, 140, 16, 0),
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: Colors.white,
               ),
-              child: Obx(() => Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Balance', style: TextStyle(
-                          fontSize: 10,
-                          color: colorBlack2
-                        )),
-                        const SizedBox(height: 4,),
-                        Text('\$${authManager.user['wallet']['balance']}', style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorBlack2
-                        ),),
-                      ],
-                    )
-                  ),
-                  const SizedBox(width: 16,),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        SizedBox(
-                          height: 60,
-                          width: double.infinity,
-                          child: Buttons.text(
-                            'Add Fund', 
-                            onPressed: () {
-                              controller.addFund();
-                            },
-                            prefixIcon: TablerIcons.plus
-                          ).primary.build(),
-                        ),
-                        if (controller.funding.value)
-                        Container(
-                          height: 60,
-                          color: Colors.white.withValues(alpha: .5),
-                        )
-                      ],
-                    )
-                  ),
-                ],
-              )),
             ),
-            const SizedBox(height: 24),
             Expanded(
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -139,9 +90,8 @@ class Wallet extends StatelessWidget {
                             labelColor: Colors.white,
                             unselectedLabelColor: colorPrimary,
                             tabs: [
-                              Tab(text: 'All'),
-                              Tab(text: 'Incoming'),
-                              Tab(text: 'Outgoing'),
+                              Tab(text: 'Upcoming'),
+                              Tab(text: 'Past'),
                             ]
                           )
                         ),
@@ -151,7 +101,7 @@ class Wallet extends StatelessWidget {
                             controller: controller.tabCtrl,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [
-                              if (allTxns.isEmpty)
+                              /*if (allTxns.isEmpty)
                               buildEmptyPlaceholder()
                               else
                               RefreshIndicator.adaptive(
@@ -172,8 +122,7 @@ class Wallet extends StatelessWidget {
                                   separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
                                   itemCount: allTxns.length
                                 ),
-                              ),
-
+                              ),*/
                               if (incomingTxns.isEmpty)
                               buildEmptyPlaceholder()
                               else
@@ -186,7 +135,6 @@ class Wallet extends StatelessWidget {
 
                                     return Material(
                                       child: _buildListItem(
-                                        type: TxnType.incoming,
                                         title: txn['reference'],
                                         subtitle: 'Transaction remark'
                                       ),
@@ -209,7 +157,6 @@ class Wallet extends StatelessWidget {
 
                                     return Material(
                                       child: _buildListItem(
-                                        type: TxnType.outgoing,
                                         title: txn['reference'],
                                         subtitle: 'Transaction remark'
                                       ),
@@ -321,7 +268,7 @@ class Wallet extends StatelessWidget {
     );
   }
 
-  Widget _buildListItem({TxnType? type, String? title, String? subtitle, Function()? onTap}) {
+  Widget _buildListItem({String? title, String? subtitle, Function()? onTap}) {
     return ListTile(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8)
@@ -333,15 +280,7 @@ class Wallet extends StatelessWidget {
         backgroundColor: colorPrimary,
         foregroundColor: Colors.white,
         radius: 22,
-        child: Transform.rotate(
-          angle: math.pi / 4,
-          child: Icon(
-            type == TxnType.incoming
-              ? TablerIcons.arrow_down
-              : TablerIcons.arrow_up,
-            size: 20
-          )
-        ) 
+        child: Icon(TablerIcons.map_pin, size: 20,)
       ),
       titleTextStyle: TextStyle(
         fontWeight: FontWeight.w600,
@@ -378,7 +317,7 @@ class WalletController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onInit() {
     super.onInit();
-    tabCtrl = TabController(length: 3, vsync: this, animationDuration: Duration.zero);
+    tabCtrl = TabController(length: 2, vsync: this, animationDuration: Duration.zero);
   }
 
   @override
