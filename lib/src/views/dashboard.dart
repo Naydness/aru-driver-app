@@ -52,12 +52,12 @@ class Dashboard extends StatelessWidget {
                     text: 'Home'
                   ),
                   Tab(
-                    icon: Icon(TablerIcons.wallet),
-                    text: 'Wallet'
+                    icon: Icon(TablerIcons.truck_delivery),
+                    text: 'Trips'
                   ),
                   Tab(
-                    icon: Icon(TablerIcons.history),
-                    text: 'Orders'
+                    icon: Icon(TablerIcons.currency_dollar),
+                    text: 'Earnings'
                   ),
                   Tab(
                     icon: Icon(TablerIcons.user),

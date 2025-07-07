@@ -295,7 +295,7 @@ class Endpoint {
   static const verifyEmail = '$_basePath/auth/driver/verify-email';
   static const resendOTP = '$_basePath/auth/driver/resend-otp';
   static const forgotPassword = '$_basePath/auth/driver/forgot-password';
-  static const getUserProfile = '$_basePath/rider/profile';
+  static const getUserProfile = '$_basePath/driver/profile';
   static const changePassword = '$_basePath/rider/change-password';
   static const updateProfile = '$_basePath/rider/profile';
   static const getAllTransactions = '$_basePath/transactions/user';

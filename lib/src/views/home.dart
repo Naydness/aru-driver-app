@@ -99,6 +99,7 @@ class Home extends StatelessWidget {
                   )
                 ),
                 child: ListView(
+                  controller: controller.scrollCtrl,
                   padding: EdgeInsets.zero,
                   children: [
                     ClipRRect(
@@ -114,147 +115,69 @@ class Home extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24,),
-                    Container(
-                      height: 60,
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEBEBEB),
-                        borderRadius: BorderRadiusDirectional.only(
-                          topStart: Radius.circular(8),
-                          topEnd: Radius.circular(8)
-                        )
-                      ),
-                      child: TabBar(
-                        controller: controller.tabCtrl,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicator: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: colorPrimary
-                        ),
-                        labelColor: Colors.white,
-                        unselectedLabelColor: colorPrimary,
-                        tabs: [
-                          Tab(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(TablerIcons.car),
-                                const SizedBox(width: 8,),
-                                Text('Ride')
-                              ],
-                            ),
-                          ),
-                          Tab(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(TablerIcons.package),
-                                const SizedBox(width: 8,),
-                                Text('Package')
-                              ],
-                            ),
-                          )
-                        ]
-                      ),
-                    ),
-                    Card(
-                      margin: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 28),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadiusDirectional.only(
-                            bottomStart: Radius.circular(12),
-                            bottomEnd: Radius.circular(12)
-                          )
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                // border: Border.all(color: Colors.red)
-                              ),
-                              constraints: BoxConstraints(
-                                minHeight: 140
-                              ),
-                              child: AddressPicker(
-                                formKey: controller.formKey,
-                                readOnly: true,
-                                onTap: () async {
-                                  Get.to(
-                                    Search(),
-                                    fullscreenDialog: true
-                                  );
-                                },
-                              )
-                            ),
-                            const SizedBox(height: 16,),
-                            Obx(() {
-                              if (addressPickerCtrl.stops.value < addressPickerCtrl.moreStops) {
-                                return InkWell(
-                                  onTap: () {
-                                    addressPickerCtrl.addStop();
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(TablerIcons.plus, color: colorPrimary,),
-                                      const SizedBox(width: 8,),
-                                      Text('Add another stop', style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: colorPrimary
-                                      ))
-                                    ]
-                                  )
-                                );
-                              }
-
-                              return Container();
-                            }),
-                            const SizedBox(height: 16,),
-                            SizedBox(
-                              height: 60,
-                              width: double.infinity,
-                              child: Buttons.text('Continue', onPressed: () {
-                                controller.gotoRide();
-                              }).primary.build(),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32,),
-                    Text('Vehicle Types', style: TextStyle(
+                    Text('Overview', style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF212121)
                     )),
                     const SizedBox(height: 16),
                     Container(
-                      height: 200,
+                      constraints: BoxConstraints(minHeight: 200),
                       decoration: BoxDecoration(
                         // border: Border.all(color: Colors.red)
                       ),
                       child: ResponsiveGridList(
                         minItemsPerRow: 2,
-                        horizontalGridSpacing: 36,
-                        verticalGridSpacing: 16,
+                        horizontalGridSpacing: 12,
+                        verticalGridSpacing: 8,
                         minItemWidth: 150, 
                         listViewBuilderOptions: ListViewBuilderOptions(
+                          shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           padding: EdgeInsets.zero
                         ),
                         children: [
-                          _buildVehicleType('car_3d.png', 'Car'),
-                          _buildVehicleType('van_3d.png', 'Van'),
-                          _buildVehicleType('truck_3d.png', 'Truck'),
-                          _buildVehicleType('bike_3d.png', 'Power Bike')
+                          _buildOverviewItem(
+                            'wallet_cash.png', 
+                            'Total Earnings',
+                            '\$125.50'
+                          ),
+                          _buildOverviewItem(
+                            'delivery_van.png', 
+                            'Total Trips',
+                            '41'
+                          ),
                         ]
                       ),
+                    ),
+                    SizedBox(
+                      child: _buildOverviewItem(
+                        null,
+                        'Average Ratings',
+                        '4.8',
+                        subtitleIcon: TablerIcons.star_filled
+                      )
+                    ),
+                    const SizedBox(height: 32,),
+                    Text('Recent Trips', style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF212121)
+                    )),
+                    const SizedBox(height: 16),
+                    ListView.separated(
+                      controller: controller.scrollCtrl,
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemBuilder: (ctx, idx) {
+                        return _buildRecentItem(
+                          title: '18, MArk Jones Way',
+                          subtitle: 'Scheduled - 20 May, 10:30AM',
+                          trailing: '\$50'
+                        );
+                      }, 
+                      separatorBuilder: (ctx, idx) => const SizedBox(height: 16,), 
+                      itemCount: 5
                     )
                   ],
                 ),
@@ -266,23 +189,94 @@ class Home extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleType(String icon, String label) {
+  Widget _buildOverviewItem(String? icon, String title, String subtitle, {IconData? subtitleIcon}) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12)
+        borderRadius: BorderRadius.circular(8)
       ),
       child: Container(
-        height: 85,
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12)
+          borderRadius: BorderRadius.circular(8)
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset('assets/images/$icon', width: 40, height: 40,),
-            const SizedBox(height: 8),
-            Text(label, style: TextStyle(
-              color: Color(0xFF212121)
+            if (icon != null) ...[
+              Image.asset('assets/images/$icon', width: 40, height: 40,),
+              const SizedBox(height: 12),
+            ],
+            Text(title, style: TextStyle(
+              fontSize: 14,
+              color: colorBlack2
+            )),
+            SizedBox(
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (subtitleIcon != null) ...[
+                    Icon(subtitleIcon, color: colorAccent,),
+                    const SizedBox(width: 8,),
+                  ],
+                  Text(subtitle, style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colorBlack2
+                  ))
+                ]
+              )
+            )
+          ],
+        ),
+      )
+    );
+  }
+
+  Widget _buildRecentItem({String? title, String? subtitle, Function()? onTap, String? trailing}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: BoxConstraints(
+          minHeight: 60
+        ),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8)
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor: colorPrimary,
+              foregroundColor: Colors.white,
+              radius: 22,
+              child: Icon(TablerIcons.map_pin, size: 20,)
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$title', style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colorBlack2
+                  )),
+                  const SizedBox(height: 8,),
+                  Text('$subtitle', style: TextStyle(
+                    fontSize: 12,
+                    color: colorBlack2
+                  ))
+                ],
+              )
+            ),
+            const SizedBox(width: 8,),
+            Text('$trailing', style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black
             ))
           ],
         ),
@@ -294,6 +288,7 @@ class Home extends StatelessWidget {
 class HomeController extends GetxController with GetSingleTickerProviderStateMixin {
   late TabController tabCtrl;
   final formKey = GlobalKey<FormState>();
+  final scrollCtrl = ScrollController();
   // Rx<AutovalidateMode> validateMode = AutovalidateMode.disabled.obs;
 
   final OrderType orderType = OrderType.ride;
