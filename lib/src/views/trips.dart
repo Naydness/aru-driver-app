@@ -60,13 +60,7 @@ class Trips extends StatelessWidget {
                 ),
                 child: controller.obx(
                   (state) {
-                    final List allTxns = state!;
-                    final List incomingTxns = allTxns
-                      .where((t) => TxnType.fromString(t['type']) == TxnType.incoming)
-                      .toList();
-                    final List outgoingTxns = allTxns
-                      .where((t) => TxnType.fromString(t['type']) == TxnType.outgoing)
-                      .toList();
+                    final List allRequests = state!;
 
                     return Column(
                       children: [
@@ -101,7 +95,9 @@ class Trips extends StatelessWidget {
                             controller: controller.tabCtrl,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [
-                              /*if (allTxns.isEmpty)
+                              Container(),
+
+                              if (allRequests.isEmpty)
                               buildEmptyPlaceholder()
                               else
                               RefreshIndicator.adaptive(
@@ -109,63 +105,20 @@ class Trips extends StatelessWidget {
                                 child: ListView.separated(
                                   padding: EdgeInsets.zero,
                                   itemBuilder: (ctx, idx) {
-                                    final txn = allTxns[idx];
+                                    final req = allRequests[idx];
 
                                     return Material(
                                       child: _buildListItem(
-                                        type: TxnType.fromString(txn['type']),
-                                        title: txn['reference'],
-                                        subtitle: 'Transaction remark'
-                                      ),
-                                    );
-                                  }, 
-                                  separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
-                                  itemCount: allTxns.length
-                                ),
-                              ),*/
-                              if (incomingTxns.isEmpty)
-                              buildEmptyPlaceholder()
-                              else
-                              RefreshIndicator.adaptive(
-                                onRefresh: () async => controller.init(),
-                                child: ListView.separated(
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (ctx, idx) {
-                                    final txn = incomingTxns[idx];
-
-                                    return Material(
-                                      child: _buildListItem(
-                                        title: txn['reference'],
-                                        subtitle: 'Transaction remark'
+                                        title: req['pickupLocation']['address']['full'],
+                                        subtitle: req['createdAt'],
+                                        trailing: '\$${req['estimatedPrice'].toStringAsFixed(2)}'
                                       ),
                                     );
                                   }, 
                                   separatorBuilder: (ctx, idx) => const SizedBox(height: 16,), 
-                                  itemCount: incomingTxns.length
+                                  itemCount: allRequests.length
                                 ),
                               ),
-
-                              if (outgoingTxns.isEmpty)
-                              buildEmptyPlaceholder()
-                              else
-                              RefreshIndicator.adaptive(
-                                onRefresh: () async => controller.init(),
-                                child: ListView.separated(
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (ctx, idx) {
-                                    final txn = outgoingTxns[idx];
-
-                                    return Material(
-                                      child: _buildListItem(
-                                        title: txn['reference'],
-                                        subtitle: 'Transaction remark'
-                                      ),
-                                    );
-                                  },
-                                  separatorBuilder: (ctx, idx) => const SizedBox(height: 16,),
-                                  itemCount: outgoingTxns.length
-                                )
-                              )
                             ]
                           )
                         )
@@ -268,7 +221,7 @@ class Trips extends StatelessWidget {
     );
   }
 
-  Widget _buildListItem({String? title, String? subtitle, Function()? onTap}) {
+  Widget _buildListItem({String? title, String? subtitle, String? trailing, Function()? onTap}) {
     return ListTile(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8)
@@ -299,7 +252,7 @@ class Trips extends StatelessWidget {
         velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
       ),
       subtitle: Text('$subtitle'),
-      trailing: Text('\$50', style: TextStyle(
+      trailing: Text('$trailing', style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Colors.black
@@ -311,7 +264,7 @@ class Trips extends StatelessWidget {
 class WalletController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
   late TabController tabCtrl;
   final HttpService http = Get.find();
-  RxList transactions = RxList.empty();
+  RxList requests = RxList.empty();
   RxBool funding = false.obs;
 
   @override
@@ -325,7 +278,7 @@ class WalletController extends GetxController with GetSingleTickerProviderStateM
     init();
   }
 
-  void init() async {
+  /*void init() async {
     change(null, status: RxStatus.loading());
     final result = await http.getAllTransactions();
     if (result is String) {
@@ -340,6 +293,18 @@ class WalletController extends GetxController with GetSingleTickerProviderStateM
       transactions.value = data['transactions'];
 
       change(transactions, status: transactions.isEmpty
+        ? RxStatus.empty() : RxStatus.success());
+    }
+  }*/
+
+  void init() async {
+    change(null, status: RxStatus.loading());
+    final result = await http.getAllRequests();
+    if (result is String) {
+      change(result, status: RxStatus.error());
+    } else {
+      requests.value = result;
+      change(requests, status: requests.isEmpty
         ? RxStatus.empty() : RxStatus.success());
     }
   }

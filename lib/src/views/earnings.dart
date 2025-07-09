@@ -1,17 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:aru/src/components/route_summary.dart';
 import 'package:aru/src/constants.dart';
 import 'package:aru/src/helper.dart';
 import 'package:aru/src/services/http.dart';
 import 'package:aru/src/services/popup_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:get/get.dart';
+import 'package:text_scroll/text_scroll.dart';
 
 class Earnings extends StatelessWidget {
   const Earnings({super.key});
 
   @override
   Widget build(BuildContext context) {
-    OrdersController controller = Get.put(OrdersController());
+    EarningsController controller = Get.put(EarningsController());
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -90,22 +94,31 @@ class Earnings extends StatelessWidget {
                 )
               ),
               const SizedBox(height: 24,),
-              /*Expanded(
+              Expanded(
                 child: controller.obx(
                   (state) {
-                    final List allOrders = state!;
-                    final List rideOrders = allOrders
-                      .where((o) => OrderType.fromString(o['serviceType']) == OrderType.ride)
+                    final List allTxns = state!;
+                    final List txnsToday = allTxns
+                      .where((t) {
+                        final txnDate = DateTime.parse(t['createdAt']);
+                        final today = DateTime.now();
+
+                        return DateUtils.isSameDay(txnDate, today);
+                      })
                       .toList();
-                    final List packageOrders = allOrders
-                      .where((o) => OrderType.fromString(o['serviceType']) == OrderType.package)
+                    final List txnsThisWeek = allTxns
+                      .where((txn) {
+                        final txnDate = DateTime.parse(txn['createdAt']);
+
+                        return isSameWeek(txnDate, DateTime.now());
+                      })
                       .toList();
 
                     return TabBarView(
                       controller: controller.tabCtrl,
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        if (allOrders.isEmpty)
+                        if (txnsToday.isEmpty)
                         buildEmptyPlaceholder()
                         else
                         RefreshIndicator.adaptive(
@@ -113,18 +126,21 @@ class Earnings extends StatelessWidget {
                           child: ListView.separated(
                             padding: EdgeInsets.zero,
                             itemBuilder: (ctx, idx) {
-                              final order = allOrders[idx];
+                              final txn = txnsToday[idx];
 
                               return Material(
-                                child: _buildListItem(order),
+                                child: _buildListItem(
+                                  title: txn['reference'],
+                                  subtitle: txn['createdAt']
+                                ),
                               );
                             }, 
                             separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
-                            itemCount: allOrders.length
+                            itemCount: txnsToday.length
                           ), 
                         ),
 
-                        if (rideOrders.isEmpty)
+                        if (txnsThisWeek.isEmpty)
                         buildEmptyPlaceholder()
                         else
                         RefreshIndicator.adaptive(
@@ -132,14 +148,17 @@ class Earnings extends StatelessWidget {
                           child: ListView.separated(
                             padding: EdgeInsets.zero,
                             itemBuilder: (ctx, idx) {
-                              final order = rideOrders[idx];
+                              final txn = txnsThisWeek[idx];
 
                               return Material(
-                                child: _buildListItem(order),
+                                child: _buildListItem(
+                                  title: txn['reference'],
+                                  subtitle: txn['createdAt']
+                                ),
                               );
                             }, 
                             separatorBuilder: (ctx, idx) => const SizedBox(height: 16), 
-                            itemCount: rideOrders.length
+                            itemCount: txnsThisWeek.length
                           ), 
                         ),
                       ]
@@ -149,75 +168,53 @@ class Earnings extends StatelessWidget {
                   onEmpty: buildEmptyPlaceholder(),
                   onError: (error) => buildErrorPlaceholder(text: error)
                 )
-              )*/
+              )
             ],
           )
-          /*ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const SizedBox(height: 16),
-              Text('20 May, 10:30 AM', style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF858585)
-              ),),
-              const SizedBox(height: 20),
-              Material(
-                child: _buildListItem()
-              ),
-              const SizedBox(height: 16),
-              Material(
-                child: _buildListItem()
-              ),
-              const SizedBox(height: 16),
-              Text('18 May, 10:30 AM', style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF858585)
-              ),),
-              const SizedBox(height: 20),
-              Material(
-                child: _buildListItem()
-              ),
-              const SizedBox(height: 16),
-              Material(
-                child: _buildListItem()
-              ),
-            ],
-          ),*/
         )
       )
     );
   }
 
-  Widget _buildListItem(Map order, {Function()? onTap}) {
-    final String pickup = order['pickupLocation']['address']['full'];
-    final String dst = order['dropoffLocation']['address']['full'];
-    final List stops = order['stops'];
-    final String amount = order['estimatedPrice'].toString();
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.white
+  Widget _buildListItem({String? title, String? subtitle, Function()? onTap}) {
+    return ListTile(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8)
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: RouteSummary(
-              pickup: pickup, 
-              destination: dst, 
-              stops: stops
-            )
-          ),
-          const SizedBox(width: 8,),
-          Text('\$$amount', style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black
-          ))
-        ],
+      horizontalTitleGap: 12,
+      tileColor: Colors.white,
+      onTap: onTap,
+      leading: CircleAvatar(
+        backgroundColor: colorPrimary,
+        foregroundColor: Colors.white,
+        radius: 22,
+        child: Transform.rotate(
+          angle: math.pi / 4,
+          child: Icon(TablerIcons.arrow_down, size: 20)
+        ) 
       ),
+      titleTextStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: colorBlack2,
+        fontSize: 14
+      ),
+      subtitleTextStyle: TextStyle(
+        fontSize: 10,
+        color: colorBlack2
+      ),
+      title: TextScroll(
+        '$title', 
+        mode: TextScrollMode.bouncing,
+        pauseOnBounce: Duration(seconds: 2),
+        pauseBetween: Duration(seconds: 2),
+        velocity: Velocity(pixelsPerSecond: Offset(20, 0)),
+      ),
+      subtitle: Text('$subtitle'),
+      trailing: Text('\$50', style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Colors.black
+      ))
     );
   }
 
@@ -265,12 +262,22 @@ class Earnings extends StatelessWidget {
       )
     );
   }
+
+  bool isSameWeek(DateTime txnDate, DateTime t) {
+    final txnDay = DateTime(txnDate.year, txnDate.month, txnDate.day);
+    final today = DateTime(t.year, t.month, t.day);
+    final daysToEOW = 7 - today.weekday;
+    final endOfWeek = today.add(Duration(days: daysToEOW));
+    Duration diff = endOfWeek.difference(txnDay);
+
+    return (diff.inDays + 1) <= 7;
+  }
 }
 
-class OrdersController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
+class EarningsController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
   late TabController tabCtrl;
   final HttpService http = Get.find();
-  RxList orders = RxList.empty();
+  RxList txns = RxList.empty();
 
   @override
   void onInit() {
@@ -285,7 +292,7 @@ class OrdersController extends GetxController with GetSingleTickerProviderStateM
 
   void init() async {
     change(null, status: RxStatus.loading());
-    final result = await http.getAllRequests();
+    final result = await http.getAllTransactions();
     if (result is String) {
       PopupManager.error(
         title: 'Failed',
@@ -293,12 +300,32 @@ class OrdersController extends GetxController with GetSingleTickerProviderStateM
       );
       change(null, status: RxStatus.error());
     } else {
-      // orders.value = result;
-      final data = await loadJson('data.json');
-      orders.value = data['rides'];
+      // txns.value = result;
 
-      change(orders, status: orders.isEmpty
+      final data = await loadJson('data.json');
+      txns.value = data['transactions'];
+      print('Txns: $txns');
+
+      change(txns, status: txns.isEmpty
         ? RxStatus.empty() : RxStatus.success());
     }
+  }
+}
+
+enum TxnType {
+  incoming,
+  outgoing;
+
+  static fromString(String type) {
+    late TxnType tnxType;
+    switch (type) {
+      case 'credit':
+        tnxType = TxnType.incoming;
+        break;
+      default:
+        tnxType = TxnType.outgoing;
+    }
+
+    return tnxType;
   }
 }
