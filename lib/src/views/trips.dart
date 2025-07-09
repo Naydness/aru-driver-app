@@ -20,7 +20,7 @@ class Trips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WalletController controller = Get.put(WalletController());
+    TripsController controller = Get.put(TripsController());
     AuthManager authManager = Get.find();
 
     return Scaffold(
@@ -261,7 +261,7 @@ class Trips extends StatelessWidget {
   }
 }
 
-class WalletController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
+class TripsController extends GetxController with GetSingleTickerProviderStateMixin, StateMixin {
   late TabController tabCtrl;
   final HttpService http = Get.find();
   RxList requests = RxList.empty();

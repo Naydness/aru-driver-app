@@ -139,12 +139,12 @@ class Home extends StatelessWidget {
                           _buildOverviewItem(
                             'wallet_cash.png', 
                             'Total Earnings',
-                            '\$125.50'
+                            '\$${authManager.user['wallet']['balance']}'
                           ),
                           _buildOverviewItem(
                             'delivery_van.png', 
                             'Total Trips',
-                            '41'
+                            authManager.user['totalTrips'].toString()
                           ),
                         ]
                       ),
@@ -154,7 +154,7 @@ class Home extends StatelessWidget {
                       child: _buildOverviewItem(
                         null,
                         'Average Ratings',
-                        '4.8',
+                        authManager.user['averageRating'].toString(),
                         subtitleIcon: TablerIcons.star_filled
                       )
                     ),

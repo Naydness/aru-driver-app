@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:aru/src/components/route_summary.dart';
 import 'package:aru/src/constants.dart';
 import 'package:aru/src/helper.dart';
+import 'package:aru/src/services/auth_manager.dart';
 import 'package:aru/src/services/http.dart';
 import 'package:aru/src/services/popup_manager.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class Earnings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EarningsController controller = Get.put(EarningsController());
+    AuthManager authManager = Get.find();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -78,14 +80,14 @@ class Earnings extends StatelessWidget {
                           child: _buildOverviewItem(
                             'wallet_cash.png', 
                             'Total Earnings',
-                            '\$125.50'
+                            '\$${authManager.user['wallet']['balance']}'
                           )
                         ),
                         Expanded(
                           child: _buildOverviewItem(
                             'delivery_van.png', 
                             'Total Trips',
-                            '41'
+                            authManager.user['totalTrips'].toString()
                           )
                         ),
                       ],
@@ -300,11 +302,11 @@ class EarningsController extends GetxController with GetSingleTickerProviderStat
       );
       change(null, status: RxStatus.error());
     } else {
-      // txns.value = result;
+      txns.value = result;
 
-      final data = await loadJson('data.json');
+      /*final data = await loadJson('data.json');
       txns.value = data['transactions'];
-      print('Txns: $txns');
+      print('Txns: $txns');*/
 
       change(txns, status: txns.isEmpty
         ? RxStatus.empty() : RxStatus.success());
