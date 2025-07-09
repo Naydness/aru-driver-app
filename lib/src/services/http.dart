@@ -242,39 +242,12 @@ class HttpService extends GetConnect {
     }
   }
 
-  Future createPaymentIntent(double amount, String currency) async {
+  Future acceptRideRequest(String reqId) async {
     try {
-      final Response res = await post(Endpoint.createStripePaymentIntent, {
-        'amount': amount,
-        'currency': currency
-      });
+      print('Accepting: $reqId');
+      final Response res = await get('${Endpoint.rideRequest}/$reqId/accept');
 
-      if (res.status.isOk) {
-        return res.body['data'];
-      }
-
-      return res.body['message'];
-    } catch (e) {
-      return 'Unable to add funds. Please try again later.';
-    }
-  }
-
-  Future createRideRequest(Map data) async {
-    try {
-      final serviceType = data['serviceType'] == 'package' ? 'delivery' : 'ride';
-      final Response res = await post(Endpoint.createRideRequest, {
-        'serviceId': data['serviceId'],
-        'serviceType': serviceType,
-        'pickupLocation': data['pickupLocation'],
-        'dropoffLocation': data['dropoffLocation'],
-        'stops': data['stops'],
-        'paymentMethod': data['paymentMethod'],
-        'specialInstructions': data['specialInstructions'],
-        'addons': data['addons']
-      });
-
-      print('Res: ${res.body}');
-
+      print('Accept Res: ${res.body}');
       if (res.status.isOk) {
         return res.body['data'];
       }
@@ -284,6 +257,24 @@ class HttpService extends GetConnect {
       return 'Unable to create ride request. Please try again later.';
     }
   }
+
+  Future rejectRideRequest(String reqId) async {
+    try {
+      print('Rejecting: $reqId');
+      final Response res = await get('${Endpoint.rideRequest}/$reqId/reject');
+
+      print('Reject Res: ${res.body}');
+      if (res.status.isOk) {
+        return res.body['data'];
+      }
+
+      return res.body['message'];
+    } catch (e) {
+      return 'Unable to create ride request. Please try again later.';
+    }
+  }
+
+
 }
 
 class Endpoint {
@@ -296,10 +287,10 @@ class Endpoint {
   static const resendOTP = '$_basePath/auth/driver/resend-otp';
   static const forgotPassword = '$_basePath/auth/driver/forgot-password';
   static const getUserProfile = '$_basePath/driver/profile';
+  static const rideRequest = '$_basePath/ride';
   static const changePassword = '$_basePath/rider/change-password';
   static const updateProfile = '$_basePath/rider/profile';
   static const getAllTransactions = '$_basePath/transactions/user';
   static const getAllRequests = '$_basePath/ride/history';
-  static const createStripePaymentIntent = '$_basePath/transactions/top-up';
-  static const createRideRequest = '$_basePath/ride/request';
+  // static const createStripePaymentIntent = '$_basePath/transactions/top-up';
 }

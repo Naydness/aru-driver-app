@@ -9,7 +9,6 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:get/get.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
-import 'ride.dart';
 import 'search.dart';
 
 class Home extends StatelessWidget {
@@ -298,18 +297,5 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   void onInit() {
     super.onInit();
     tabCtrl = TabController(length: 2, vsync: this, animationDuration: Duration.zero);
-  }
-
-  void gotoRide() {
-    // Get.to(Ride()); return;
-
-    if (formKey.currentState!.validate()) {
-      Get.to(Ride());
-    } else {
-      PopupManager.error(
-        title: 'Location required',
-        message: 'Pickup/Destination locations required'
-      );
-    }
   }
 }

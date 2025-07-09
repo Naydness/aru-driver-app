@@ -343,38 +343,6 @@ class WalletController extends GetxController with GetSingleTickerProviderStateM
         ? RxStatus.empty() : RxStatus.success());
     }
   }
-
-  void addFund() async {
-    funding.value = true;
-    final result = await http.createPaymentIntent(20, 'usd');
-    if (result is String) {
-      PopupManager.error(
-        title: 'Failed',
-        message: result
-      );
-    } else {
-      Stripe.publishableKey = dotenv.get('STRIPE_PK');
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          merchantDisplayName: 'ARU',
-          paymentIntentClientSecret: result['clientSecret'],
-          style: ThemeMode.light
-        )
-      );
-
-      try {
-        await Stripe.instance.presentPaymentSheet();
-        DashboardController dashboardCtrl = Get.find();
-        dashboardCtrl.init();
-        /*clear intent*/
-      } on StripeException catch (e) {
-        print('Stripe Err: $e');
-      } catch (e) {
-        print('Err: $e');
-      }
-    }
-    funding.value = false;
-  }
 }
 
 enum TxnType {

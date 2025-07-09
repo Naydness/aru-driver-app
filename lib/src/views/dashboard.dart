@@ -109,9 +109,40 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
     print('Channel: $channel');
     subscription = channel.subscribe().listen((ably.Message message) {
       print('Ably Event (Driver): ${message.name}');
-    });
+      final payload = message.data as Map;
+      debugPrint('Payload: $payload', wrapWidth: 2000);
+      switch (message.name) {
+        case 'ride-request':
+          showRequest(payload);
+          break;
 
-    /*Get.bottomSheet(
+        case 'ride-timeout':
+        case 'ride-cancelled':
+          _closeRequest();
+          break;
+
+        default:
+      }
+    });
+  }
+
+  Future init() async {
+    change(null, status: RxStatus.loading());
+    final result = await http.getUserProfile();
+    if (result is String) {
+      change(result, status: RxStatus.error());
+    } else {
+      authManager.saveUser(result);
+      change(null, status: RxStatus.success());
+    }
+  }
+
+  void showRequest(Map r) {
+    final reqId = r['rideRequestId'];
+    final req = r['rideRequest'];
+    final fullname = '${req['rider']['firstName']} ${req['rider']['lastName']}';
+
+    Get.bottomSheet(
       isDismissible: false,
       Container(
         padding: EdgeInsets.symmetric(horizontal: 36, vertical: 24),
@@ -131,12 +162,12 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
                       children: [
                         Text('Ride Request'),
                         const SizedBox(height: 8),
-                        Text('2.3 miles - 12 mins')
+                        Text('${req['estimatedDistance'].toStringAsFixed(2)} Km - ${req['estimatedDuration'].toStringAsFixed(0)} mins')
                       ],
                     ),
                   ),
                   const SizedBox(width: 8,),
-                  Text('\$70', style: TextStyle(
+                  Text('\$${req['estimatedPrice'].toStringAsFixed(2)}', style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: colorBlack2
@@ -145,9 +176,9 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
               ),
               const SizedBox(height: 16,),
               RouteSummary(
-                pickup: '12, James Oxford Street', 
-                destination: '24, David Street', 
-                stops: []
+                pickup: req['pickupLocation']['address']['full'], 
+                destination: req['dropoffLocation']['address']['full'], 
+                stops: req['stops']
               ),
               const SizedBox(height: 16,),
               Text('Addons', style: TextStyle(
@@ -157,10 +188,9 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
               )),
               const SizedBox(height: 4,),
               Wrap(
-                children: [
-                  Text('Moving Item, '),
-                  Text('Fragile Item'),
-                ],
+                children: (req['addons'] as List).map((a) {
+                  return Text('$a ');
+                }).toList()
               ),
               const SizedBox(height: 12,),
               Column(
@@ -171,7 +201,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
                     fontWeight: FontWeight.w600,
                     color: colorBlack2
                   )),
-                  Text('Customer is a disable'),
+                  Text('${req['specialInstructions']}'),
                   const SizedBox(height: 16,),
                   Row(
                     children: [
@@ -196,7 +226,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('John Doe', style: TextStyle(
+                            Text(fullname, style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: colorBlack2
@@ -217,13 +247,13 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
                     children: [
                       Expanded(
                         child: Buttons.text('Reject', onPressed: () {
-
+                          rejectRequest(reqId);
                         }).red.build()
                       ),
                       const SizedBox(width: 24,),
                       Expanded(
                         child: Buttons.text('Accept', onPressed: () {
-
+                          acceptRequest(reqId);
                         }).green.build()
                       )
                     ],
@@ -234,18 +264,21 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
           ),
         ),
       )
-    );*/
+    );
   }
 
-  Future init() async {
-    change(null, status: RxStatus.loading());
-    final result = await http.getUserProfile();
-    if (result is String) {
-      change(result, status: RxStatus.error());
-    } else {
-      authManager.saveUser(result);
-      change(null, status: RxStatus.success());
-    }
+  void _closeRequest() {
+    Get.until((route) => route.settings.name == '/');
+  }
+
+  void acceptRequest(String reqId) async {
+    final result = await http.acceptRideRequest(reqId);
+    _closeRequest();
+  }
+
+  void rejectRequest(String reqId) async {
+    final result = await http.rejectRideRequest(reqId);
+    _closeRequest();
   }
 }
 
