@@ -106,7 +106,11 @@ class ForgotPassword extends StatelessWidget {
                           formKey: controller.stage1FormKey,
                           tokenController: controller.otpCtrl,
                           submitText: 'Reset Password',
-                          onSubmit: () => controller.verifyToken(),
+                          onSubmit: () {
+                            if (controller.stage1FormKey.currentState!.validate()) {
+                              controller.stage.value = FPStage.updatePassword;
+                            }
+                          }
                         ),
                       ),
                     ),
@@ -281,19 +285,39 @@ class ForgotPasswordController extends GetxController {
     }
   }
 
-  void verifyToken() async {
+  /*void verifyToken() async {
     if (stage1FormKey.currentState!.validate()) {
       processing.value = true;
       
       stage.value = FPStage.updatePassword;
     }
-  }
+  }*/
 
   void updatePassword() async {
     if (stage2FormKey.currentState!.validate()) {
       processing.value = true;
       
-      
+      final data = {
+        'email': emailCtrl.text,
+        'otp': otpCtrl.text,
+        'password': passwd1Ctrl.text
+      };
+
+      final result = await http.resetPassword(data);
+      if (result is bool) {
+        Get.back();
+        PopupManager.success(
+          title: 'Success',
+          message: 'Password updated successfully.'
+        );
+      } else {
+        PopupManager.error(
+          title: 'Failed',
+          message: result
+        );
+      }
+
+      processing.value = false;
     }
   }
 }

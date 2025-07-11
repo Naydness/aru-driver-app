@@ -222,6 +222,7 @@ class Earnings extends StatelessWidget {
 
   Widget _buildOverviewItem(String? icon, String title, String subtitle, {IconData? subtitleIcon}) {
     return Card(
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8)
       ),

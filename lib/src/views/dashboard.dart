@@ -16,6 +16,7 @@ import 'home.dart';
 import 'my_ride.dart';
 import 'earnings.dart';
 import 'profile.dart';
+import 'ride.dart';
 import 'trips.dart';
 
 class Dashboard extends StatelessWidget {
@@ -24,6 +25,7 @@ class Dashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DashboardController controller = Get.put(DashboardController());
+    Get.put(TripsController());
 
     return controller.obx(
       (state) {
@@ -253,7 +255,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
                       const SizedBox(width: 24,),
                       Expanded(
                         child: Buttons.text('Accept', onPressed: () {
-                          acceptRequest(reqId);
+                          acceptRequest(r);
                         }).green.build()
                       )
                     ],
@@ -271,9 +273,11 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
     Get.until((route) => route.settings.name == '/');
   }
 
-  void acceptRequest(String reqId) async {
+  void acceptRequest(dynamic r) async {
+    final reqId = r['rideRequestId'];
     final result = await http.acceptRideRequest(reqId);
     _closeRequest();
+    Get.to(Ride(r['rideRequest']));
   }
 
   void rejectRequest(String reqId) async {

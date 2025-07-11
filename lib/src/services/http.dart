@@ -196,6 +196,24 @@ class HttpService extends GetConnect {
     }
   }
 
+  Future resetPassword(Map data) async {
+    try {
+      final Response res = await post(Endpoint.resetPassword, {
+        'email': data['email'],
+        'otp': data['otp'],
+        'password': data['password']
+      });
+
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return res.body['message'];
+    } catch (e) {
+      return 'Unable to update password. Please try again later.';
+    }
+  }
+
   Future updateProfile(String fname, String lname, String phone) async {
     try {
       final Response res = await patch(Endpoint.updateProfile, {
@@ -274,6 +292,21 @@ class HttpService extends GetConnect {
     }
   }
 
+  Future toggleAvailability() async {
+    try {
+      final Response res = await post(Endpoint.toggleAvailibility, null);
+
+      print('Avail Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
 
 }
 
@@ -289,8 +322,10 @@ class Endpoint {
   static const getUserProfile = '$_basePath/driver/profile';
   static const rideRequest = '$_basePath/ride';
   static const changePassword = '$_basePath/rider/change-password';
+  static const resetPassword = '$_basePath/auth/driver/reset-password';
   static const updateProfile = '$_basePath/rider/profile';
   static const getAllTransactions = '$_basePath/transactions/user';
   static const getAllRequests = '$_basePath/ride/history';
+  static const toggleAvailibility = '$_basePath/driver/update-availability';
   // static const createStripePaymentIntent = '$_basePath/transactions/top-up';
 }

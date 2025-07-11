@@ -20,7 +20,7 @@ class Trips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TripsController controller = Get.put(TripsController());
+    TripsController controller = Get.find();
     AuthManager authManager = Get.find();
 
     return Scaffold(
@@ -95,7 +95,7 @@ class Trips extends StatelessWidget {
                             controller: controller.tabCtrl,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [
-                              Container(),
+                              buildEmptyPlaceholder(),
 
                               if (allRequests.isEmpty)
                               buildEmptyPlaceholder()
@@ -124,90 +124,6 @@ class Trips extends StatelessWidget {
                         )
                       ],
                     );
-                    /*return RefreshIndicator.adaptive(
-                      onRefresh: () async => controller.init(),
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          
-                          const SizedBox(height: 16),
-                          TabBarView(
-                            controller: controller.tabCtrl,
-                            children: [
-
-                            ]
-                          )
-                          Text('20 May, 10:30 AM', style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF858585)
-                          )),
-                          const SizedBox(height: 20),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.incoming,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Wallet funding - Paystack'
-                            )
-                          ),
-                          const SizedBox(height: 16),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.outgoing,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Ride payment - Paystack'
-                            )
-                          ),
-                          const SizedBox(height: 16),
-                          Text('18 May, 10:30 AM', style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF858585)
-                          )),
-                          const SizedBox(height: 20),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.outgoing,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Ride payment - Paystack'
-                            )
-                          ),
-                          const SizedBox(height: 16),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.incoming,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Wallet funding - Paystack'
-                            )
-                          ),
-                          const SizedBox(height: 16),
-                          Text('16 May, 10:30 AM', style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF858585)
-                          )),
-                          const SizedBox(height: 20),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.incoming,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Wallet funding - Paystack'
-                            )
-                          ),
-                          const SizedBox(height: 16),
-                          Material(
-                            child: _buildListItem(
-                              type: TxnType.outgoing,
-                              icon: TablerIcons.arrow_up,
-                              title: 'Xch00210Wfr',
-                              subtitle: 'Ride payment - Paystack'
-                            )
-                          ),
-                        ],
-                      )
-                    );*/
                   },
                   onLoading: buildLoader(opacity: 0),
                   onEmpty: buildEmptyPlaceholder(),

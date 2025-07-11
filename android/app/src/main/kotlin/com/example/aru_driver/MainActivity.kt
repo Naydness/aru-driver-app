@@ -1,4 +1,4 @@
-package com.example.aru-driver
+package com.example.aru_driver
 
 // import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterFragmentActivity

@@ -236,7 +236,7 @@ class VerifyAccount extends StatelessWidget {
                     child: OTP(
                       formKey: controller.formKey,
                       tokenController: controller.otpCtrl,
-                      submitText: 'Reset Password',
+                      submitText: 'Submit',
                       onSubmit: () => controller.verifyToken(),
                     ),
                   ),
