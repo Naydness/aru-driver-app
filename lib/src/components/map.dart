@@ -1,21 +1,25 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:aru/src/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:rxdart/rxdart.dart' as rx;
 
 class AruMap extends StatefulWidget {
-  // final LatLng initialLocation;
-  final Map request;
+  final Rx<AruMapLocation> currentLocation;
+  final Rx<AruMapLocation> destination;
+  // void onMapCreated(GoogleMapController)? onMapCreated;
 
   const AruMap({
     super.key, 
-    required this.request, 
+    required this.currentLocation, 
+    required this.destination,
+    // this.onMapCreated
   });
 
   @override
@@ -27,32 +31,18 @@ class AruMapState extends State<AruMap> {
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   List<LatLng> polylineCoordinates = [];
-  PolylinePoints polylinePoints = PolylinePoints();
+  late PolylinePoints polylinePoints;
 
-  late BitmapDescriptor pickupIcon;
-  late BitmapDescriptor dropoffIcon;
-
-  late List pickupCoords = widget.request['pickupLocation']['coordinates'];
-  late List dropoffCoords = widget.request['dropoffLocation']['coordinates'];
-
-  late LatLng pickupLocation;
-  late LatLng dropoffLocation;
+  late AruMapLocation currentLocation;
+  late AruMapLocation destination;
 
   @override
   void initState() {
     super.initState();
-    pickupLocation = LatLng(pickupCoords[1], pickupCoords[0]);
-    dropoffLocation = LatLng(pickupCoords[1], pickupCoords[0]);
-  }
-
-  Future setSourceAndDestinationIcons() async {
-    final Uint8List pickupMarkerIcon = await getBytesFromAsset('assets/images/pickup.png', 100);
-    pickupIcon = BitmapDescriptor.bytes(pickupMarkerIcon);
-
-    final Uint8List dropoffMarkerIcon = await getBytesFromAsset('assets/images/dropoff.png', 100);
-    dropoffIcon = BitmapDescriptor.bytes(dropoffMarkerIcon);
-
-    setMapPins();
+    final apiKey = String.fromEnvironment('GOOGLE_API_KEY');
+    polylinePoints = PolylinePoints(apiKey: apiKey);
+    currentLocation = widget.currentLocation.value;
+    destination = widget.destination.value;
   }
 
   @override
@@ -62,7 +52,7 @@ class AruMapState extends State<AruMap> {
         zoom: 12,
         bearing: 30,
         tilt: 0,
-        target: pickupLocation,
+        target: currentLocation.coordinates,
       ),
       compassEnabled: false,
       tiltGesturesEnabled: false,
@@ -73,31 +63,56 @@ class AruMapState extends State<AruMap> {
   }
 
   void onMapCreated(GoogleMapController controller) async {
+    _controller.complete(controller);
     controller.moveCamera(CameraUpdate.newLatLngBounds(
-      computeBounds([dropoffLocation, pickupLocation]), 
+      computeBounds([
+        destination.coordinates, 
+        currentLocation.coordinates
+      ]), 
       70
     ));
 
-    _controller.complete(controller);
-    await setSourceAndDestinationIcons();
+    setMapPins();
     await setPolylines();
 
-    await Future.delayed(Duration(seconds: 3));
+    widget.currentLocation.stream.listen((l) {
+      updateMap(l);
+    });
 
-    // updateMapPin();
+    widget.destination.stream.listen((l) {
+      updateMap(l);
+    });
+  }
+
+  void updateMap(AruMapLocation data) async {
+    setState(() {
+      _markers.removeWhere((m) => m.markerId.value == data.title);
+
+      _markers.add(Marker(
+        markerId: MarkerId(data.title),
+        position: data.coordinates,
+        icon: data.markerIcon
+      ));
+    });
+
+    await setPolylines();
   }
 
   void setMapPins() {
     setState(() {
       _markers.add(Marker(
-        markerId: MarkerId('pickupPin'),
-        position: pickupLocation,
-        icon: pickupIcon
+        markerId: MarkerId('currLocPin'),
+        position: currentLocation.coordinates,
+        // position: LatLng(6.568211261788388, 3.3671732968195087),
+        icon: currentLocation.markerIcon,
+        anchor: Offset(0.5, 0.5)
       ));
-      _markers.add(Marker(
-        markerId: MarkerId('dropoffPin'),
-        position: dropoffLocation,
-        icon: dropoffIcon
+
+      _markers.add( Marker(
+        markerId: MarkerId('dstPin'),
+        position: destination.coordinates,
+        icon: destination.markerIcon,
+        anchor: Offset(0.5, 0.5)
       ));
     });
   }
@@ -128,11 +143,19 @@ class AruMapState extends State<AruMap> {
   }*/
 
   setPolylines() async {
+    polylineCoordinates.clear();
+    _polylines.clear();
+
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: 'AIzaSyDB1OcmcWfuWBk_2xkGENRZ-D9Ud7tjVpg',
       request: PolylineRequest(
-        origin: PointLatLng(pickupLocation.latitude, pickupLocation.longitude),
-        destination: PointLatLng(dropoffLocation.latitude, dropoffLocation.longitude),
+        origin: PointLatLng(
+          currentLocation.coordinates.latitude,
+          currentLocation.coordinates.longitude
+        ),
+        destination: PointLatLng(
+          destination.coordinates.latitude,
+          destination.coordinates.longitude
+        ),
         mode: TravelMode.driving
       )
     );
@@ -149,11 +172,12 @@ class AruMapState extends State<AruMap> {
       // create a Polyline instance
       // with an id, an RGB color and the list of LatLng pairs
       Polyline polyline = Polyline(
-          width: 5,
-          patterns: [PatternItem.dash(10), PatternItem.gap(10)],
-          polylineId: PolylineId("poly"),
-          color: colorPrimary,
-          points: polylineCoordinates);
+        width: 5,
+        patterns: [PatternItem.dash(10), PatternItem.gap(10)],
+        polylineId: PolylineId("poly"),
+        color: colorPrimary,
+        points: polylineCoordinates
+      );
 
       // add the constructed polyline as a set of points
       // to the polyline set, which will eventually
@@ -162,17 +186,7 @@ class AruMapState extends State<AruMap> {
     });
   }
 
-  Future<Uint8List> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-      targetWidth: width
-    );
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
-      .buffer
-      .asUint8List();
-  }
+  
 
   LatLngBounds computeBounds(List<LatLng> list) {
     assert(list.isNotEmpty);
@@ -189,5 +203,31 @@ class AruMapState extends State<AruMap> {
       e = max(e, latlng.longitude);
     }
     return LatLngBounds(southwest: LatLng(s, w), northeast: LatLng(n, e));
+  }
+}
+
+class AruMapLocation {
+  late String title;
+  LatLng coordinates = LatLng(0.0, 0.0);
+  late String iconPath;
+  late BitmapDescriptor markerIcon;
+
+  Future init(String title, String iconPath) async {
+    this.title = title;
+    this.iconPath = iconPath;
+    final Uint8List icon = await _getBytesFromAsset(iconPath, 100);
+    markerIcon = BitmapDescriptor.bytes(icon);
+  }
+
+  Future<Uint8List> _getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width
+    );
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+      .buffer
+      .asUint8List();
   }
 }

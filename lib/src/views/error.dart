@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ErrorScreen extends StatelessWidget {
-  const ErrorScreen({super.key});
+  const ErrorScreen({super.key, this.text});
+
+  final String? text;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text('Something went wrong'),
+        child: Text(text ?? 'Something went wrong'),
       ),
     );
   }

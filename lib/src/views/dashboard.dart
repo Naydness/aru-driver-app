@@ -7,8 +7,11 @@ import 'package:aru/src/constants.dart';
 import 'package:aru/src/helper.dart';
 import 'package:aru/src/services/auth_manager.dart';
 import 'package:aru/src/services/http.dart';
+import 'package:aru/src/services/location_handler.dart';
+import 'package:aru/src/services/popup_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import 'error.dart';
@@ -79,7 +82,7 @@ class Dashboard extends StatelessWidget {
       onLoading: Material(
         child: buildLoader()
       ),
-      onError: (err) => ErrorScreen()
+      onError: (err) => ErrorScreen(text: err,)
     );
   }
 }
@@ -88,7 +91,10 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   late TabController tabCtrl;
   HttpService http = Get.find();
   AuthManager authManager = Get.find();
-  late StreamSubscription<ably.Message> subscription;
+  late StreamSubscription<ably.Message> reqSubscription;
+  StreamSubscription<Position>? positionSubscription;
+  Stream<Position>? locationStream;
+  final String ablyKey = 'RbvVsQ.q4uDvQ:JlsQNqGVMJ9Ojikn5a-sINinYqRBsWOdRQD8pFv0HJQ';
 
   @override
   void onInit() {
@@ -98,6 +104,13 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
 
   @override
   void onReady() async {
+    /*final hasLocPermission = await LocationHandler.handleLocationPermission();
+    print('has: $hasLocPermission');
+    if (!hasLocPermission) {
+      change('Enable location service to continue', status: RxStatus.error());
+      return;
+    }*/
+
     await init();
 
     final ably.Realtime realtime = ably.Realtime(options: ably.ClientOptions(
@@ -109,7 +122,7 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
     print('user ID: $userId');
     ably.RealtimeChannel channel = realtime.channels.get('driver:$userId');
     print('Channel: $channel');
-    subscription = channel.subscribe().listen((ably.Message message) {
+    reqSubscription = channel.subscribe().listen((ably.Message message) {
       print('Ably Event (Driver): ${message.name}');
       final payload = message.data as Map;
       debugPrint('Payload: $payload', wrapWidth: 2000);
@@ -128,6 +141,14 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
     });
   }
 
+  @override
+  void onClose() {
+    print('onClose');
+    positionSubscription?.cancel();
+    reqSubscription.cancel();
+    super.onClose();
+  }
+
   Future init() async {
     change(null, status: RxStatus.loading());
     final result = await http.getUserProfile();
@@ -135,7 +156,43 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
       change(result, status: RxStatus.error());
     } else {
       authManager.saveUser(result);
+      if (result['isOnline']) {
+        startLocationUpdate();
+      } else {
+        positionSubscription?.cancel();
+      }
       change(null, status: RxStatus.success());
+    }
+  }
+
+  void startLocationUpdate() async {
+    print('Updating location...');
+    locationStream = await LocationHandler.getLocationStream();
+    if (locationStream != null) {
+      final ably.Realtime realtime = ably.Realtime(options: ably.ClientOptions(
+        key: ablyKey
+      ));
+      final userId = authManager.user['_id'];
+      ably.RealtimeChannel channel = realtime.channels.get('driver:$userId:location');
+
+      positionSubscription = locationStream!.listen((Position? position) {
+        if (position != null) {
+          print({
+            'Lat': position.latitude, 
+            'Lng': position.longitude,
+            'heading': position.heading
+          });
+          channel.publish(
+            name: 'location-update',
+            data: {
+              'coordinates': [
+                position.longitude,
+                position.latitude
+              ]
+            }
+          );
+        }
+      });
     }
   }
 
@@ -276,8 +333,17 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
   void acceptRequest(dynamic r) async {
     final reqId = r['rideRequestId'];
     final result = await http.acceptRideRequest(reqId);
-    _closeRequest();
-    Get.to(Ride(r['rideRequest']));
+    if (!result) {
+      PopupManager.error(
+        title: 'Failed',
+        message: 'Failed to accept request'
+      );
+    } else {
+      DashboardController dashboardCtrl = Get.find();
+      await dashboardCtrl.reqSubscription.cancel();
+      print('Accepted');
+      Get.to(Ride(r['rideRequest']));
+    }
   }
 
   void rejectRequest(String reqId) async {

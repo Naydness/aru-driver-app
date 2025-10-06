@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:text_scroll/text_scroll.dart';
 
+import 'dashboard.dart';
 import 'search.dart';
 
 class Home extends StatelessWidget {
@@ -22,6 +23,7 @@ class Home extends StatelessWidget {
     HomeController controller = Get.put(HomeController());
     TripsController tripsController = Get.find();
     AuthManager authManager = Get.find();
+    DashboardController dashboardCtrl = Get.find();
 
     return Scaffold(
       body: Container(
@@ -102,7 +104,7 @@ class Home extends StatelessWidget {
                       )
                     ),
                     child: RefreshIndicator.adaptive(
-                      onRefresh: () async => controller.init(),
+                      onRefresh: () async => dashboardCtrl.init(),
                       child: ListView(
                         controller: controller.scrollCtrl,
                         padding: EdgeInsets.zero,
@@ -363,22 +365,12 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
     change(null, status: RxStatus.success());
   }
 
-  void init() async {
-    change(null, status: RxStatus.loading());
-    final result = await http.getUserProfile();
-    if (result is String) {
-      change(null, status: RxStatus.error());
-    } else {
-      authManager.saveUser(result);
-      change(null, status: RxStatus.success());
-    }
-  }
-
   void toggleAvailability() async {
     change(null, status: RxStatus.loading());
     final result = await http.toggleAvailability();
     if (result ?? false) {
-      init();
+      DashboardController dashboardCtrl = Get.find();
+      dashboardCtrl.init();
     }
     change(null, status: RxStatus.success());
   }

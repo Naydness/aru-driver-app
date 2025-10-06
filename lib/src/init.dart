@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:aru/src/services/auth_manager.dart';
 import 'package:aru/src/services/http.dart';
+import 'package:aru/src/services/location_handler.dart';
 import 'package:aru/src/views/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -204,17 +205,9 @@ class InitController extends GetxController with StateMixin<Widget> {
 
   Future init() async {
     change(null, status: RxStatus.loading());
-    /*
-      first launch
-        :true - Goto onboarding -> login
-        :false - Get user profile
-          :token valid - Goto home
-          :invalid - refresh token
-            :true - store token, then go home
-            :false - login
-    */
     final firstLaunch = GetStorage().read('firstLaunch') ?? true;
     if (firstLaunch) {
+      await FlutterSecureStorage().deleteAll();
       change(Onboarding(), status: RxStatus.success());
       return;
     }

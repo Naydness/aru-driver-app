@@ -267,12 +267,12 @@ class HttpService extends GetConnect {
 
       print('Accept Res: ${res.body}');
       if (res.status.isOk) {
-        return res.body['data'];
+        return true;
       }
 
-      return res.body['message'];
+      return false;
     } catch (e) {
-      return 'Unable to create ride request. Please try again later.';
+      return null;
     }
   }
 
@@ -307,7 +307,95 @@ class HttpService extends GetConnect {
     }
   }
 
+  Future driverArrived(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/arrive', null);
 
+      print('Arrived Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future startTrip(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/start', null);
+
+      print('Start Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future stopReached(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/stop-reached', null);
+
+      print('Stop Reached Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future stopCompleted(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/stop-completed', null);
+
+      print('Stop Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future skipStop(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/stop-skip', null);
+
+      print('StopSkip Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future completeTrip(String reqId) async {
+    try {
+      final Response res = await post('${Endpoint.trip}/$reqId/complete', null);
+
+      print('StopSkip Res: ${res.body}');
+      if (res.status.isOk) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 class Endpoint {
@@ -327,5 +415,6 @@ class Endpoint {
   static const getAllTransactions = '$_basePath/transactions/user';
   static const getAllRequests = '$_basePath/ride/history';
   static const toggleAvailibility = '$_basePath/driver/update-availability';
+  static const trip = '$_basePath/ride';
   // static const createStripePaymentIntent = '$_basePath/transactions/top-up';
 }

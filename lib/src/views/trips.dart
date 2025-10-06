@@ -7,7 +7,6 @@ import 'package:aru/src/services/popup_manager.dart';
 import 'package:aru/src/views/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:get/get.dart';
 
