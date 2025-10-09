@@ -199,7 +199,7 @@ class Home extends StatelessWidget {
                                 _buildOverviewItem(
                                   'wallet_cash.png', 
                                   'Total Earnings',
-                                  '\$${authManager.user['wallet']['balance']}'
+                                  '\$${authManager.user['wallet']['balance'].toStringAsFixed(2)}'
                                 ),
                                 _buildOverviewItem(
                                   'delivery_van.png', 

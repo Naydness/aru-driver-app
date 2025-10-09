@@ -80,7 +80,7 @@ class Earnings extends StatelessWidget {
                           child: _buildOverviewItem(
                             'wallet_cash.png', 
                             'Total Earnings',
-                            '\$${authManager.user['wallet']['balance']}'
+                            '\$${authManager.user['wallet']['balance'].toStringAsFixed(2)}'
                           )
                         ),
                         Expanded(
