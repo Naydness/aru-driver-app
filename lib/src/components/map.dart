@@ -3,23 +3,23 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:aru/src/constants.dart';
+import 'package:aru/src/views/ride.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:rxdart/rxdart.dart' as rx;
 
 class AruMap extends StatefulWidget {
   final Rx<AruMapLocation> currentLocation;
   final Rx<AruMapLocation> destination;
-  // void onMapCreated(GoogleMapController)? onMapCreated;
+  final Rx<OrderState> orderState;
 
   const AruMap({
     super.key, 
     required this.currentLocation, 
     required this.destination,
-    // this.onMapCreated
+    required this.orderState
   });
 
   @override
@@ -31,7 +31,9 @@ class AruMapState extends State<AruMap> {
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   List<LatLng> polylineCoordinates = [];
-  late PolylinePoints polylinePoints;
+  PolylinePoints polylinePoints = PolylinePoints();
+  late ValueNotifier<Set<Polyline>> _polylineNotifier;
+  String? style;
 
   late AruMapLocation currentLocation;
   late AruMapLocation destination;
@@ -39,26 +41,84 @@ class AruMapState extends State<AruMap> {
   @override
   void initState() {
     super.initState();
-    final apiKey = String.fromEnvironment('GOOGLE_API_KEY');
-    polylinePoints = PolylinePoints(apiKey: apiKey);
+
+    _polylineNotifier = ValueNotifier<Set<Polyline>>({});
     currentLocation = widget.currentLocation.value;
+    widget.currentLocation.stream.listen((location) async {
+      print('Current location change...');
+      currentLocation = location;
+      await setPolylines();
+      updateMarkers();
+    });
+
     destination = widget.destination.value;
+    widget.destination.stream.listen((location) async {
+      print('Destination change...');
+      destination = location;
+      await setPolylines();
+      updateMarkers();
+    });
+
+    print('Current: ${currentLocation.coordinates}');
+    print('Destination: ${destination.coordinates}');
+
+    widget.orderState.listen((state) async {
+      print('OrderState change...');
+
+      switch (state) {
+        case OrderState.rideAccepted:
+        case OrderState.rideStarted:
+          final c = await _controller.future;
+          await c.moveCamera(CameraUpdate.newLatLngBounds(
+            computeBounds([
+              polylineCoordinates.last,
+              polylineCoordinates.first
+            ]), 
+            70
+          ));
+          break;
+        default:
+      }
+    });
+
+    setMapStyle();
+  }
+
+  void setMapStyle() async {
+    rootBundle.loadString('assets/map_theme.json').then((v) {
+      setState(() {
+        style = v;
+      });
+    });
+  }
+
+  void initMapObjects(OrderState orderState) async {
+    await setPolylines();
+    updateMarkers();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        zoom: 12,
-        bearing: 30,
-        tilt: 0,
-        target: currentLocation.coordinates,
-      ),
-      compassEnabled: false,
-      tiltGesturesEnabled: false,
-      markers: _markers,
-      polylines: _polylines,
-      onMapCreated: onMapCreated,
+    return ValueListenableBuilder(
+      valueListenable: _polylineNotifier, 
+      builder: (context, polylines, _) {
+        return GoogleMap(
+          initialCameraPosition: CameraPosition(
+            zoom: 12,
+            bearing: 30,
+            tilt: 0,
+            target: currentLocation.coordinates,
+          ),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height * .5),
+          compassEnabled: false,
+          tiltGesturesEnabled: false,
+          markers: _markers,
+          polylines: polylines,
+          style: style,
+          zoomControlsEnabled: false,
+          onMapCreated: onMapCreated,
+        );
+      }
     );
   }
 
@@ -72,77 +132,56 @@ class AruMapState extends State<AruMap> {
       70
     ));
 
-    setMapPins();
-    await setPolylines();
-
-    widget.currentLocation.stream.listen((l) {
-      updateMap(l);
-    });
-
-    widget.destination.stream.listen((l) {
-      updateMap(l);
-    });
+    initMapObjects(widget.orderState.value);
   }
 
-  void updateMap(AruMapLocation data) async {
-    setState(() {
-      _markers.removeWhere((m) => m.markerId.value == data.title);
+  void updateMarkers() async {
+    if (polylineCoordinates.isNotEmpty) {
+      setState(() {
+        _markers.clear();
 
-      _markers.add(Marker(
-        markerId: MarkerId(data.title),
-        position: data.coordinates,
-        icon: data.markerIcon
-      ));
-    });
+        _markers.add(
+          Marker(
+            markerId: MarkerId('currLocPin'),
+            position: polylineCoordinates.first,
+            icon: currentLocation.markerIcon,
+            anchor: Offset(0.5, 0.5)
+          )
+        );
 
-    await setPolylines();
+        _markers.add(
+          Marker(
+            markerId: MarkerId('dstPin'),
+            position: polylineCoordinates.last,
+            icon: destination.markerIcon,
+            anchor: Offset(0.5, 0.5)
+          )
+        );
+      });
+    }
   }
 
-  void setMapPins() {
-    setState(() {
-      _markers.add(Marker(
-        markerId: MarkerId('currLocPin'),
-        position: currentLocation.coordinates,
-        // position: LatLng(6.568211261788388, 3.3671732968195087),
-        icon: currentLocation.markerIcon,
-        anchor: Offset(0.5, 0.5)
-      ));
+  void setMarkers() {
+    if (polylineCoordinates.isNotEmpty) {
+      setState(() {
+        _markers.add(Marker(
+          markerId: MarkerId('currLocPin'),
+          position: polylineCoordinates.first,
+          icon: currentLocation.markerIcon,
+          anchor: Offset(0.5, 0.5)
+        ));
 
-      _markers.add( Marker(
-        markerId: MarkerId('dstPin'),
-        position: destination.coordinates,
-        icon: destination.markerIcon,
-        anchor: Offset(0.5, 0.5)
-      ));
-    });
+        _markers.add( Marker(
+          markerId: MarkerId('dstPin'),
+          position: polylineCoordinates.last,
+          icon: destination.markerIcon,
+          anchor: Offset(0.5, 0.5)
+        ));
+      });
+    }
   }
 
-  /*Future updateMapPin() async {
-    final courierId = widget.shipment.to['_id'];
-    List? courierCoords = await _userService.getCourierLocation(id: courierId);
-
-    print('coords: $courierCoords');
-
-    CameraPosition cPosition = CameraPosition(
-        zoom: 14,
-        tilt: 0,
-        bearing: 30,
-        target: LatLng(courierCoords![0], courierCoords[1]));
-
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
-
-    setState(() {
-      _markers.removeWhere((m) => m.markerId.value == 'pkgPin');
-
-      _markers.add(Marker(
-          markerId: MarkerId('pkgPin'),
-          position: LatLng(courierCoords[0], courierCoords[1]),
-          icon: sourceIcon));
-    });
-  }*/
-
-  setPolylines() async {
+  Future<void> setPolylines() async {
     polylineCoordinates.clear();
     _polylines.clear();
 
@@ -157,37 +196,29 @@ class AruMapState extends State<AruMap> {
           destination.coordinates.longitude
         ),
         mode: TravelMode.driving
-      )
+      ),
+      googleApiKey: 'AIzaSyDB1OcmcWfuWBk_2xkGENRZ-D9Ud7tjVpg'
     );
 
     if (result.points.isNotEmpty) {
       // loop through all PointLatLng points and convert them
       // to a list of LatLng, required by the Polyline
-      result.points.forEach((PointLatLng point) {
+      for (var point in result.points) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
+      }
     }
 
-    setState(() {
-      // create a Polyline instance
-      // with an id, an RGB color and the list of LatLng pairs
-      Polyline polyline = Polyline(
-        width: 5,
-        patterns: [PatternItem.dash(10), PatternItem.gap(10)],
-        polylineId: PolylineId("poly"),
-        color: colorPrimary,
-        points: polylineCoordinates
-      );
 
-      // add the constructed polyline as a set of points
-      // to the polyline set, which will eventually
-      // end up showing up on the map
-      _polylines.add(polyline);
-    });
+    Polyline polyline = Polyline(
+      width: 5,
+      polylineId: PolylineId("poly"),
+      color: colorPrimary,
+      points: polylineCoordinates
+    );
+
+    _polylineNotifier.value = {polyline};
   }
-
   
-
   LatLngBounds computeBounds(List<LatLng> list) {
     assert(list.isNotEmpty);
     var firstLatLng = list.first;

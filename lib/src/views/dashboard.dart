@@ -341,7 +341,6 @@ class DashboardController extends GetxController with GetSingleTickerProviderSta
     } else {
       DashboardController dashboardCtrl = Get.find();
       await dashboardCtrl.reqSubscription.cancel();
-      print('Accepted');
       Get.to(Ride(r['rideRequest']));
     }
   }

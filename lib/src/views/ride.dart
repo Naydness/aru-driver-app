@@ -38,200 +38,194 @@ class Ride extends StatelessWidget {
   Widget build(BuildContext context) {
     RideController controller = Get.put(RideController(request));
 
-    /*print('R: $request');
+    final fullname = '${request['rider']['firstName']} ${request['rider']['lastName']}';
 
-    final requestCoords = {
-      'pickupLocation': request['pickupLocation'],
-      'dropoffLocation': request['dropoffLocation']
-    };*/
-
-    final fullname = '${request['rider']['firstName']} ${request['rider']['lastName']}}';
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * .6,
-            child: Obx(() {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Obx(() {
               if (controller.showMap.value) {
                 return AruMap(
                   currentLocation: controller.currentLocation, 
-                  destination: controller.destination
+                  destination: controller.destination,
+                  orderState: controller.orderState,
                 );
               }
 
               return Container();
-            })
-          ),
-          DraggableScrollableSheet(
-            initialChildSize: 0.6,
-            minChildSize: 0.4,
-            maxChildSize: 0.9,
-            // snap: true,
-            builder: (context, scrollController) {
-              return Card(
-                margin: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12)
-                  )
-                ),
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 40),
-                  color: Color(0xFFF6F6F6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 6,
-                        width: 36,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
-                          color: Colors.grey
+            }),
+            DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.5,
+              maxChildSize: 0.9,
+              // snap: true,
+              builder: (context, scrollController) {
+                return Card(
+                  margin: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12)
+                    )
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 40),
+                    color: Color(0xFFF6F6F6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 6,
+                          width: 36,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100),
+                            color: Colors.grey
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16,),
-                      Expanded(
-                        child: Obx(() {
-                          if (controller.processing.value) {
-                            return buildLoader();
-                          }
+                        const SizedBox(height: 16,),
+                        Expanded(
+                          child: Obx(() {
+                            if (controller.processing.value) {
+                              return buildLoader();
+                            }
 
-                          return Column(
-                            children: [
-                              Expanded(
-                                child: ListView(
-                                  controller: scrollController,
-                                  padding: EdgeInsets.zero,
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(8)
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                width: 60,
-                                                height: 60,
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(16)
-                                                ),
-                                                child: Image.asset('assets/images/user.png'),
-                                              ),
-                                              const SizedBox(width: 16,),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(fullname, style: TextStyle(
-                                                      fontWeight: FontWeight.w600,
-                                                      color: colorBlack2
-                                                    )),
-                                                    const SizedBox(height: 8,),
-                                                    Text('Customer', style: TextStyle(
-                                                      color: Color(0xFF858585),
-                                                      fontSize: 12
-                                                    ))
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16,),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: SizedBox(
+                            return Column(
+                              children: [
+                                Expanded(
+                                  child: ListView(
+                                    controller: scrollController,
+                                    padding: EdgeInsets.zero,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8)
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  width: 60,
                                                   height: 60,
-                                                  child: Buttons.text(
-                                                    'Call', 
-                                                    prefixIcon: TablerIcons.phone_ringing,
-                                                    onPressed: () {}
-                                                  ).primary.build(),
-                                                )
-                                              ),
-                                              const SizedBox(width: 24,),
-                                              Expanded(
-                                                child: SizedBox(
-                                                  height: 60,
-                                                  child: Buttons.text(
-                                                    'Chat', 
-                                                    prefixIcon: TablerIcons.message,
-                                                    onPressed: () {}
-                                                  ).primary.outlined.build(),
-                                                )
-                                              ),
-                                            ],
-                                          )
-                                        ],
-                                      )
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(8)
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(16)
+                                                  ),
+                                                  child: Image.asset('assets/images/user.png'),
+                                                ),
+                                                const SizedBox(width: 16,),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(fullname, style: TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: colorBlack2
+                                                      )),
+                                                      const SizedBox(height: 8,),
+                                                      Text('Customer', style: TextStyle(
+                                                        color: Color(0xFF858585),
+                                                        fontSize: 12
+                                                      ))
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16,),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 60,
+                                                    child: Buttons.text(
+                                                      'Call', 
+                                                      prefixIcon: TablerIcons.phone_ringing,
+                                                      onPressed: () {}
+                                                    ).primary.build(),
+                                                  )
+                                                ),
+                                                const SizedBox(width: 24,),
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 60,
+                                                    child: Buttons.text(
+                                                      'Chat', 
+                                                      prefixIcon: TablerIcons.message,
+                                                      onPressed: () {}
+                                                    ).primary.outlined.build(),
+                                                  )
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        )
                                       ),
-                                      child: RouteSummary(
-                                        pickup: request['pickupLocation']['address']['full'], 
-                                        destination: request['dropoffLocation']['address']['full'], 
-                                        stops: request['stops']
+                                      const SizedBox(height: 16),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8)
+                                        ),
+                                        child: RouteSummary(
+                                          pickup: request['pickupLocation']['address']['full'], 
+                                          destination: request['dropoffLocation']['address']['full'], 
+                                          stops: request['stops']
+                                        )
                                       )
-                                    )
-                                  ],
-                                )
-                              ),
-                              const SizedBox(height: 16),
-                              switch (controller.orderState.value) {
-                                OrderState.rideAccepted => SizedBox(
-                                  height: 60,
-                                  width: double.infinity,
-                                  child: Buttons.text('Arrived', onPressed: () {
-                                    controller.arrived();
-                                  })
-                                  .primary
-                                  .build(),
+                                    ],
+                                  )
                                 ),
-                                OrderState.arrivedAtPickup => SizedBox(
-                                  height: 60,
-                                  width: double.infinity,
-                                  child: Buttons.text('Start Trip', onPressed: () {
-                                    controller.startTrip();
-                                  })
-                                  .primary
-                                  .build(),
-                                ),
-                                OrderState.rideStarted => SizedBox(
-                                  height: 60,
-                                  width: double.infinity,
-                                  child: Buttons.text('End Trip', onPressed: () {
-                                    controller.completeTrip();
-                                    // > ride-awaiting-payment
-                                  })
-                                  .primary
-                                  .build(),
-                                ),
+                                const SizedBox(height: 16),
+                                switch (controller.orderState.value) {
+                                  OrderState.rideAccepted => SizedBox(
+                                    height: 60,
+                                    width: double.infinity,
+                                    child: Buttons.text('Arrived', onPressed: () {
+                                      controller.arrived();
+                                    })
+                                    .primary
+                                    .build(),
+                                  ),
+                                  OrderState.arrivedAtPickup => SizedBox(
+                                    height: 60,
+                                    width: double.infinity,
+                                    child: Buttons.text('Start Trip', onPressed: () {
+                                      controller.startTrip();
+                                    })
+                                    .primary
+                                    .build(),
+                                  ),
+                                  OrderState.rideStarted => SizedBox(
+                                    height: 60,
+                                    width: double.infinity,
+                                    child: Buttons.text('End Trip', onPressed: () {
+                                      controller.completeTrip();
+                                      // > ride-awaiting-payment
+                                    })
+                                    .primary
+                                    .build(),
+                                  ),
 
-                                _ => Container()
-                              }
-                            ],
-                          );
-                        })
-                      )
-                    ],
+                                  _ => Container()
+                                }
+                              ],
+                            );
+                          })
+                        )
+                      ],
+                    )
                   )
-                )
-              );
-            }
-          )
-        ],
+                );
+              }
+            )
+          ],
+        )
       )
     );
   }
@@ -334,27 +328,15 @@ class Ride extends StatelessWidget {
 }
 
 class RideController extends GetxController with StateMixin {
-  final Completer<GoogleMapController> mapCtrl = Completer<GoogleMapController>();
   Rx<AruMapLocation> currentLocation = AruMapLocation().obs;
   Rx<AruMapLocation> destination = AruMapLocation().obs;
-
-  late OrderType selectedOrderType;
   Rx<OrderState> orderState = OrderState.rideAccepted.obs;
-  late Rx<VehicleType> selectedVehicle;
-  late Rx<CarClass> selectedClass;
-  final detailsFormKey = GlobalKey<FormState>();
-  late List<String?> addons;
-  String? instructions;
-  late Rx<BookingSchedule> bookingSchedule;
-  late Rx<DateTime> bookingDate;
-  List<String>? bookingRecurringDays;
+  RxBool showMap = false.obs;
 
   final HttpService http = Get.find();
   final AuthManager authManager = Get.find();
   final DashboardController dashboardCtrl = Get.find();
   late StreamSubscription<ably.Message> subscription;
-
-  String? activeRequestId;
 
   RxBool processing = false.obs;
 
@@ -362,12 +344,10 @@ class RideController extends GetxController with StateMixin {
 
   RideController(this.request);
 
-  RxBool showMap = false.obs;
-  RxMap requestCoords = RxMap();
-
   @override
-  void onReady() {
+  void onReady() async {
     subscribeToRequest(request['_id']);
+    destination.value.init('dstPin', 'assets/images/dropoff.png');
     destination.value.coordinates = LatLng(
       request['pickupLocation']['coordinates'][1],
       request['pickupLocation']['coordinates'][0]
@@ -375,16 +355,23 @@ class RideController extends GetxController with StateMixin {
     destination.refresh();
 
     currentLocation.value.init('currLocPin', 'assets/images/pickup.png');
-    destination.value.init('dstPin', 'assets/images/dropoff.png');
-    dashboardCtrl.locationStream!.listen((Position? position) {
-      if (position != null) {
-        currentLocation.value.coordinates = LatLng(
-          position.latitude,
-          position.longitude
-        );
-        currentLocation.refresh();
-      }
-    });
+    final position = await LocationHandler.getCurrentPosition();
+    currentLocation.value.coordinates = LatLng(
+      position!.latitude,
+      position.longitude
+    );
+    final locationStream = await LocationHandler.getLocationStream();
+    if (locationStream != null) {
+      locationStream.listen((Position? position) {
+        if (position != null) {
+          currentLocation.value.coordinates = LatLng(
+            position.latitude,
+            position.longitude
+          );
+          currentLocation.refresh();
+        }
+      });
+    }
 
     if (showMap.value == false) {
       showMap.value = true;
@@ -398,14 +385,10 @@ class RideController extends GetxController with StateMixin {
   }
 
   void subscribeToRequest(String reqId) {
-    // final String ablyKey = String.fromEnvironment('ABLY_KEY');
-    // final userId = authManager.user['_id'];
-
     final ably.Realtime realtime = ably.Realtime(options: ably.ClientOptions(
       key: 'RbvVsQ.q4uDvQ:JlsQNqGVMJ9Ojikn5a-sINinYqRBsWOdRQD8pFv0HJQ'
     ));
     ably.RealtimeChannel channel = realtime.channels.get('ride:$reqId');
-    // await channel.attach();
 
     print('Subscribing to ${channel.name}');
     subscription = channel.subscribe().listen((ably.Message message) async {
@@ -421,6 +404,19 @@ class RideController extends GetxController with StateMixin {
           break;
 
         case 'driver-arrived':
+          currentLocation.value.coordinates = LatLng(
+            request['pickupLocation']['coordinates'][1],
+            request['pickupLocation']['coordinates'][0],
+          );
+          currentLocation.refresh();
+
+          destination.value.coordinates = LatLng(
+            request['dropoffLocation']['coordinates'][1],
+            request['dropoffLocation']['coordinates'][0],
+          );
+          destination.refresh();
+
+
           orderState.value = OrderState.arrivedAtPickup;
           break;
 
